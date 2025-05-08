@@ -22,6 +22,10 @@ BPatternRewrite >> buildPatternAST [
 	ruleAssoc := definitionBlock valueWithArguments: (Array new: definitionBlock numArgs).
 	searchPattern := ruleAssoc key bpattern.
 	rewritePattern := ruleAssoc value bpattern.
+	searchPattern isSequenceNode = rewritePattern isSequenceNode 
+		ifFalse: [ searchPattern isSequenceNode
+				ifTrue: [ rewritePattern adoptToSequenceNode ]
+				ifFalse: [ searchPattern adoptToSequenceNode ]]
 ]
 
 { #category : 'accessing' }

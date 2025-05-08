@@ -19,7 +19,72 @@ BPatternTest >> testCreationFromBlock [
 	self assert: patternVarNodes notEmpty.
 	patternVarNodes do: [:each | 
 		self assert: each isPatternNode.
-		self assert: each isAnything
+		self assert: each isAnything.
+	].	 
+	(allVarNodes copyWithoutAll: patternVarNodes) do: [ :each |
+			self deny: each isPatternNode 
+	].
+	block sourceNode variableNodes do: [:each | 
+		self deny: each  isPatternNode "original AST was not modified"
+	]
+]
+
+{ #category : 'tests' }
+BPatternTest >> testCreationFromBlockForCascadeWithExternalPatternReceiver [
+
+	| actual block allVarNodes patternVarNodes patternVar |
+	block := [ patternVar printString; asString].
+	actual := block bpattern: [patternVar].
+	
+	self assert: actual patternAST isCascade.
+	allVarNodes :=  actual patternAST variableNodes.
+	patternVarNodes := allVarNodes select: [:each | each name = 'patternVar' ].
+	self assert: patternVarNodes size equals: 2.
+	patternVarNodes do: [:each | 
+		self assert: each isPatternNode.
+	]
+]
+
+{ #category : 'tests' }
+BPatternTest >> testCreationFromBlockWithExternalPatternVar [
+
+	| actual block allVarNodes patternVarNodes patternTemp |
+	block := [ | nonPatternVar | patternTemp isNil ifFalse: [ patternTemp printString. nonPatternVar ]].
+	actual := block bpattern: { [ patternTemp ] }.
+	
+	self assert: actual class equals: BPattern.
+	self assert: actual definitionBlock identicalTo: block.
+	allVarNodes :=  actual patternAST variableNodes.
+	patternVarNodes := allVarNodes select: [:each | each name = 'patternTemp' ].
+	self assert: patternVarNodes notEmpty.
+	patternVarNodes do: [:each | 
+		self assert: each isPatternNode.
+		self assert: each isAnything.	
+	].	 
+	(allVarNodes copyWithoutAll: patternVarNodes) do: [ :each |
+			self deny: each isPatternNode 
+	].
+	block sourceNode variableNodes do: [:each | 
+		self deny: each  isPatternNode "original AST was not modified"
+	]
+]
+
+{ #category : 'tests' }
+BPatternTest >> testCreationFromBlockWithVarDefinitionBlock [
+
+	| actual block allVarNodes patternVarNodes patternTemp |
+	block := [ | nonPatternVar | patternTemp isNil ifFalse: [ patternTemp printString. nonPatternVar ]].
+	actual := block bpattern: { [ patternTemp ] -> [:pattern | pattern beStatement ] }.
+	
+	self assert: actual class equals: BPattern.
+	self assert: actual definitionBlock identicalTo: block.
+	allVarNodes :=  actual patternAST variableNodes.
+	patternVarNodes := allVarNodes select: [:each | each name = 'patternTemp' ].
+	self assert: patternVarNodes notEmpty.
+	patternVarNodes do: [:each | 
+		self assert: each isPatternNode.
+		self deny: each isAnything.
+		self assert: each isStatement.
 	].	 
 	(allVarNodes copyWithoutAll: patternVarNodes) do: [ :each |
 			self deny: each isPatternNode 
@@ -42,6 +107,20 @@ BPatternTest >> testRewriteAST [
 	expectedResult := [:someVar | someVar ifNotNil: [ someVar printString ]] sourceNode formattedCode.
 	self assert: rewrittenCode equals: expectedResult
 
+]
+
+{ #category : 'tests' }
+BPatternTest >> testRewriteASTExternalPatternVar [
+	| searchBlock rewriteBlock searchPattern rewritePattern originalBlock rewrittenAST rewrittenCode expectedResult a |
+	searchBlock := [a isNil ifFalse: [ a printString ]].
+	rewriteBlock := [a ifNotNil: [ a printString ]].
+	searchPattern := searchBlock bpattern: { [ a ] }.
+	rewritePattern := rewriteBlock bpattern: { [ a ] }.
+	originalBlock := [:someVar | someVar isNil ifFalse: [ someVar printString ]].
+	rewrittenAST := searchPattern rewriteAST: originalBlock sourceNode with: rewritePattern.
+	rewrittenCode := rewrittenAST formattedCode.
+	expectedResult := [:someVar | someVar ifNotNil: [ someVar printString ]] sourceNode formattedCode.
+	self assert: rewrittenCode equals: expectedResult
 ]
 
 { #category : 'tests' }

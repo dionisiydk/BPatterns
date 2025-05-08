@@ -28,6 +28,7 @@ BPatternRewriteTest >> rewriteAST: originalASTBlock by: aBPatternRewriteBlock co
 	| originalAST |
 	brewrite := aBPatternRewriteBlock brewrite.
 	originalAST := self expressionASTFrom: originalASTBlock.
+	originalAST := OCSequenceNode statements: (Array with: originalAST).
 	rewrittenAST := brewrite rewriteAST: originalAST.
 	rewrittenCode := rewrittenAST formattedCode.
 	expectedCode := (self expressionASTFrom: expectedASTBlock) formattedCode.
@@ -92,6 +93,29 @@ BPatternRewriteTest >> testRewriteForInstVarRename [
 		rewriteAST: [  instVar printString  ]
 		by: [ 	[  instVar  ] -> [ instVarNewName  ] ]
 		compareTo: [ instVarNewName printString ]
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteForKeywordReplace [
+	self 
+		rewriteAST: [ ^self foo: 1 put: 2 ]
+		by: [:rcvr :arg1 :arg2 | 
+			[ ^rcvr any: arg1 put: arg2 ] -> [ ^rcvr put: arg1 put: arg2 ]
+				bpattern: #any:
+		]
+		compareTo: [ ^self put: 1 put: 2 ] 
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteForMessageReceiverAndArgSwap [
+	self 
+		rewriteAST: [ 1 + 2 + 3. 3 foo: 4 ]
+		by: [:rcvr :arg | 
+			[ rcvr message: arg ] -> [ arg message: rcvr ]
+				bpattern: {#message: . [ rcvr. arg. ] -> [:p | p beList; beRecursive] }
+				
+		]
+		compareTo: [ 3 + (2 + 1). 4 foo: 3 ]
 ]
 
 { #category : 'tests' }

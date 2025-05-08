@@ -15,6 +15,16 @@ BPattern class >> fromBlock: aBlockClosure [
 		definitionBlock: aBlockClosure 
 ]
 
+{ #category : 'converting' }
+BPattern >> adoptToSequenceNode [ 
+	patternAST := OCSequenceNode statements: (Array with: patternAST)
+]
+
+{ #category : 'converting' }
+BPattern >> bpattern [
+	^self
+]
+
 { #category : 'private' }
 BPattern >> buildPatternAST [
 	
@@ -29,6 +39,15 @@ BPattern >> buildPatternAST [
 ]
 
 { #category : 'accessing' }
+BPattern >> configureBy: configSpecs [
+	
+	| patternConfigs astBuilder |
+	patternConfigs := BPatternConfig readFromSpecs: configSpecs.
+	astBuilder := BPatternASTBuilder configuredBy: patternConfigs.
+	astBuilder visitNode: patternAST
+]
+
+{ #category : 'accessing' }
 BPattern >> definitionBlock [
 
 	^ definitionBlock
@@ -39,6 +58,11 @@ BPattern >> definitionBlock: anObject [
 
 	definitionBlock := anObject.
 	self buildPatternAST
+]
+
+{ #category : 'testing' }
+BPattern >> isSequenceNode [ 
+	^patternAST isSequence
 ]
 
 { #category : 'accessing' }
