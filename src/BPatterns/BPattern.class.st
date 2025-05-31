@@ -81,7 +81,7 @@ BPattern >> patternAST: anObject [
 BPattern >> rewriteAST: originalAST with: rewritePattern [
 
 	| rewriter |
-	rewriter := OCParseTreeRewriter new.
+	rewriter := BPatternASTRewriter new.
 	rewriter addRule: (BPatternReplaceRule new 
 			searchTree: patternAST;
 			replaceTree: rewritePattern patternAST).

@@ -70,6 +70,28 @@ BPatternTest >> testCreationFromBlockWithExternalPatternVar [
 ]
 
 { #category : 'tests' }
+BPatternTest >> testCreationFromBlockWithMessagePattern [
+
+	| actual block allMessages patternMessage |
+	block := [:a :b| self nonPatternPart: a anySuffix: b. a printString ].
+	actual := block bpattern: #anySuffix:.
+	
+	self assert: actual class equals: BPattern.
+	self assert: actual definitionBlock identicalTo: block.
+	allMessages := actual patternAST sendNodes.
+	patternMessage := allMessages first.
+	self assert: patternMessage isPatternNode.
+	self assert: patternMessage patternKeywords equals: #(anySuffix:).
+	self deny: allMessages second isPatternNode.
+	block sourceNode sendNodes do: [:each | 
+		self deny: each  isPatternNode "original AST was not modified"
+	].
+	block sourceNode variableNodes do: [:each | 
+		self deny: each  isPatternNode "original AST was not modified"
+	]
+]
+
+{ #category : 'tests' }
 BPatternTest >> testCreationFromBlockWithVarDefinitionBlock [
 
 	| actual block allVarNodes patternVarNodes patternTemp |

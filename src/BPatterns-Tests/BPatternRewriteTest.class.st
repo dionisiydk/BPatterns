@@ -15,11 +15,22 @@ Class {
 
 { #category : 'helpers' }
 BPatternRewriteTest >> expressionASTFrom: aBlock [
-	| fullAST |
-	fullAST := aBlock sourceNode.
-	^(fullAST statements size == 1 and: [ fullAST temporaries isEmpty ])
+	| fullAST expressionAST |
+	fullAST := aBlock sourceNode copy.
+	expressionAST := (fullAST statements size == 1 and: [ fullAST temporaries isEmpty ])
 		  ifTrue: [ fullAST statements first ]
 		  ifFalse: [ fullAST body ].
+	^OCSequenceNode statements: (Array with: expressionAST)
+]
+
+{ #category : 'helpers' }
+BPatternRewriteTest >> rewriteAST2: originalAST by: aBPatternRewriteBlock compareTo: expectedAST [
+
+	brewrite := aBPatternRewriteBlock brewrite.
+	rewrittenAST := brewrite rewriteAST: originalAST.
+	rewrittenCode := rewrittenAST formattedCode.
+	expectedCode := expectedAST formattedCode.
+	self assert: rewrittenCode equals: expectedCode
 ]
 
 { #category : 'helpers' }
@@ -28,11 +39,19 @@ BPatternRewriteTest >> rewriteAST: originalASTBlock by: aBPatternRewriteBlock co
 	| originalAST |
 	brewrite := aBPatternRewriteBlock brewrite.
 	originalAST := self expressionASTFrom: originalASTBlock.
-	originalAST := OCSequenceNode statements: (Array with: originalAST).
 	rewrittenAST := brewrite rewriteAST: originalAST.
 	rewrittenCode := rewrittenAST formattedCode.
 	expectedCode := (self expressionASTFrom: expectedASTBlock) formattedCode.
 	self assert: rewrittenCode equals: expectedCode
+]
+
+{ #category : 'helpers' }
+BPatternRewriteTest >> rewriteMethod: aSelector by: aBPatternRewriteBlock [
+
+	self 
+		rewriteAST2: (BPatternMethodExamples >> aSelector) ast
+		by: aBPatternRewriteBlock 
+		compareTo: (BPatternRewrittenMethodExamples >> aSelector) ast
 ]
 
 { #category : 'tests' }
@@ -51,6 +70,17 @@ BPatternRewriteTest >> testCreationFromBlock [
 	self assert: brewrite searchPattern patternAST variableNodes first isPatternNode.
 	self assert: brewrite rewritePattern patternAST variableNodes first isPatternNode.
 	self deny: block sourceNode variableNodes first isPatternNode "original AST was not modified"
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteForCascade [
+	self 
+		rewriteAST: [ self foo; printString; foo: 4; bar. self foo: 4 ]
+		by: [:first :second :third | 
+			[ self messages1; foo: 4; messages2 ] -> [ self messages2; bar: 4; messages1 ]
+				bpattern: #(messages1 messages2) -> [ :p | p beCascadeList ]
+		]
+		compareTo: [ self bar; bar: 4; foo; printString. self foo:4 ]
 ]
 
 { #category : 'tests' }
@@ -74,6 +104,16 @@ BPatternRewriteTest >> testRewriteForDuplicatesReplace [
 				}
 		]
 		compareTo: [ 2 timesRepeat: [ self first; second ]. self a. self b ]
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteForDynamicArray [
+	self 
+		rewriteAST: [  {(1 @ 255).	(Color lightMagenta). 3} ]
+		by: [:first :second :third | 
+			[ {first. second. third} ] -> [ Array with: first with: second with: third ]				
+		]
+		compareTo: [ Array with: 1 @ 255 with: Color lightMagenta with: 3 ]
 ]
 
 { #category : 'tests' }
@@ -102,8 +142,19 @@ BPatternRewriteTest >> testRewriteForKeywordReplace [
 		by: [:rcvr :arg1 :arg2 | 
 			[ ^rcvr any: arg1 put: arg2 ] -> [ ^rcvr put: arg1 put: arg2 ]
 				bpattern: #any:
-		]
+		] 
 		compareTo: [ ^self put: 1 put: 2 ] 
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteForKeywordReplaceShouldIgnoreUnmachedSelectors [
+	self 
+		rewriteAST: [ ^self foo: 1 some: 2 ]
+		by: [:rcvr :arg1 :arg2 | 
+			[ ^rcvr any: arg1 put: arg2 ] -> [ ^rcvr put: arg1 put: arg2 ]
+				bpattern: #any:
+		] 
+		compareTo: [ ^self foo: 1 some: 2 ] 
 ]
 
 { #category : 'tests' }
@@ -127,6 +178,32 @@ BPatternRewriteTest >> testRewriteForMessageReplace [
 				bpattern: #(any1:any2: any3)
 		]
 		compareTo: [ self d: 2 e: 1; f. self halt ]
+]
+
+{ #category : 'tests on methods' }
+BPatternRewriteTest >> testRewriteForMethods [
+
+	self 
+		rewriteMethod: #recursionMethod:with:
+		by: [:method :stmts :vars | 
+			[[ method anyMessage: vars ] -> [ stmts. self anyMessage: vars ]] bmethod 
+				->
+			[[ method anyMessage: vars ] -> [ [ stmts ] repeat ]] bmethod
+				bpattern: #(anyMessages)
+		]
+]
+
+{ #category : 'tests on methods' }
+BPatternRewriteTest >> testRewriteForMethodsWithTemps [
+
+	self 
+		rewriteMethod: #recursionMethod:with:
+		by: [:method :stmts :vars | 
+			[[ method anyMessage: vars ] -> [| temps | stmts. self anyMessage: vars ]] bmethod 
+				->
+			[[ method anyMessage: vars ] -> [| temps | [ stmts. ] repeat ]] bmethod
+				bpattern: #(anyMessages 'temps')
+		]
 ]
 
 { #category : 'tests' }
@@ -156,6 +233,25 @@ BPatternRewriteTest >> testRewriteForTempRenameOfMessageReceiver [
 		rewriteAST: [ a printString  ]
 		by: [ 	[ a  ] -> [ b  ] ]
 		compareTo: [ b printString ]
+]
+
+{ #category : 'tests on methods' }
+BPatternRewriteTest >> testRewriteMethodForArgRename [
+
+	| arg renamedArg |
+	self 
+		rewriteMethod: ##methodWithArg:
+		by:  [ [ arg  ] -> [ renamedArg  ] ]
+]
+
+{ #category : 'tests on methods' }
+BPatternRewriteTest >> testRewriteMethodForIfNilRule [
+
+	self 
+		rewriteMethod: ##isNilIfFalseWith:
+		by:  [:a | 
+			[ a isNil ifFalse: [ a printString ]] -> [ a ifNotNil: [ a printString ]]
+		]
 ]
 
 { #category : 'tests' }

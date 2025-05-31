@@ -1,13 +1,23 @@
 Class {
 	#name : 'BPatternMessageNode',
 	#superclass : 'OCPatternMessageNode',
+	#instVars : [
+		'patternKeywords'
+	],
 	#category : 'BPatterns',
 	#package : 'BPatterns'
 }
 
+{ #category : 'initialization' }
+BPatternMessageNode >> initialize [ 
+	super initialize.
+	
+	patternKeywords := #()
+]
+
 { #category : 'matching' }
 BPatternMessageNode >> isPatternKeyword: aString [ 
-	^true
+	^patternKeywords includes: aString
 ]
 
 { #category : 'matching' }
@@ -23,4 +33,16 @@ BPatternMessageNode >> matchSelectorAgainst: aNode inContext: aDictionary [
 		keyword = second
 			ifFalse: [ ^ false ] ].
 	^ true
+]
+
+{ #category : 'accessing' }
+BPatternMessageNode >> patternKeywords [
+
+	^ patternKeywords
+]
+
+{ #category : 'accessing' }
+BPatternMessageNode >> patternKeywords: anObject [
+
+	patternKeywords := anObject
 ]

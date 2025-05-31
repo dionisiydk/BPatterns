@@ -5,10 +5,18 @@ Class {
 	#package : 'BPatterns'
 }
 
+{ #category : 'applying' }
+BPatternMessageConfig >> applyForNode: anASTNode [
+	anASTNode bePatternNode.
+	anASTNode patternKeywords: self patternKeywords.
+	definitionBlock ifNotNil: [ definitionBlock value: anASTNode ]
+]
+
 { #category : 'testing' }
 BPatternMessageConfig >> isForNode: anASTNode [
 
-	^anASTNode isMessage and: [ anASTNode keywords includesAny: self patternKeywords ]
+	^(anASTNode isMessage or: [ anASTNode isMethod ]) 
+		and: [ anASTNode keywords includesAny: self patternKeywords ]
 ]
 
 { #category : 'accessing' }
