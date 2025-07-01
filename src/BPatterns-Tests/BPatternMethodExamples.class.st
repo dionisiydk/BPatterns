@@ -11,7 +11,7 @@ BPatternMethodExamples >> isNilIfFalseWith: arg [
 ]
 
 { #category : 'examples' }
-BPatternMethodExamples >> methodWithArg: arg [
+BPatternMethodExamples >> methodWithRenamedArg: arg [
 	^arg printString
 ]
 
@@ -19,4 +19,17 @@ BPatternMethodExamples >> methodWithArg: arg [
 BPatternMethodExamples >> recursionMethod: arg1 with: arg2 [
 	arg1 printOn: arg2.
 	self recursionMethod: arg1 with: arg2
+]
+
+{ #category : 'examples' }
+BPatternMethodExamples >> recursionMethodByRenamedTemp: arg1 with: arg2 [
+	| tempA tempB |
+	^tempA + tempB
+]
+
+{ #category : 'examples' }
+BPatternMethodExamples >> recursionMethodWithTemps: arg1 with: arg2 [
+	| tempA tempB |
+	arg1 printOn: arg2.
+	self recursionMethodWithTemps: arg1 with: arg2
 ]

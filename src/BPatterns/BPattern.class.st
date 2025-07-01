@@ -17,7 +17,8 @@ BPattern class >> fromBlock: aBlockClosure [
 
 { #category : 'converting' }
 BPattern >> adoptToSequenceNode [ 
-	patternAST := OCSequenceNode statements: (Array with: patternAST)
+	patternAST isSequence ifFalse: [ 
+		patternAST := OCSequenceNode statements: (Array with: patternAST)]
 ]
 
 { #category : 'converting' }

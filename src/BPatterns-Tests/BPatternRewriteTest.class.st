@@ -189,20 +189,46 @@ BPatternRewriteTest >> testRewriteForMethods [
 			[[ method anyMessage: vars ] -> [ stmts. self anyMessage: vars ]] bmethod 
 				->
 			[[ method anyMessage: vars ] -> [ [ stmts ] repeat ]] bmethod
-				bpattern: #(anyMessages)
+				bpattern: #anyMessage: -> [ :p| p beList ]
 		]
 ]
 
 { #category : 'tests on methods' }
-BPatternRewriteTest >> testRewriteForMethodsWithTemps [
-
+BPatternRewriteTest >> testRewriteForMethodsUsingNoArgsPattern [
+	self skip: 'TODO: unary anyMessage should be list by default (matching any args count)'.
 	self 
 		rewriteMethod: #recursionMethod:with:
-		by: [:method :stmts :vars | 
-			[[ method anyMessage: vars ] -> [| temps | stmts. self anyMessage: vars ]] bmethod 
+		by: [:method :stmts | 
+			[[ method anyMessage ] -> [ stmts. self anyMessage ]] bmethod 
 				->
-			[[ method anyMessage: vars ] -> [| temps | [ stmts. ] repeat ]] bmethod
-				bpattern: #(anyMessages 'temps')
+			[[ method anyMessage ] -> [ [ stmts ] repeat ]] bmethod
+				bpattern: #anyMessage -> [ :p| p beList ]
+		]
+]
+
+{ #category : 'tests on methods' }
+BPatternRewriteTest >> testRewriteForMethodsWithTempRename [
+
+	self 
+		rewriteMethod: #recursionMethodByRenamedTemp:with:
+		by: [:method :stmts :vars | 
+			[[ method anyMessage: vars ] -> [| tempA tempB | ^tempA + tempB ]] bmethod 
+				->
+			[[ method anyMessage: vars ] -> [| tempC tempB | ^tempC + tempB ]] bmethod
+				bpattern: #anyMessage: 
+		]
+]
+
+{ #category : 'tests on methods' }
+BPatternRewriteTest >> testRewriteForMethodsWithTempsWithoutTempsInPattern [
+
+	self 
+		rewriteMethod: #recursionMethodWithTemps:with:
+		by: [:method :stmts :vars | 
+			[[ method anyMessage: vars ] -> [ stmts. self anyMessage: vars ]] bmethod 
+				->
+			[[ method anyMessage: vars ] -> [ [ stmts ] repeat ]] bmethod
+				bpattern: #anyMessage: -> [ :p| p beList ]
 		]
 ]
 
@@ -240,7 +266,7 @@ BPatternRewriteTest >> testRewriteMethodForArgRename [
 
 	| arg renamedArg |
 	self 
-		rewriteMethod: ##methodWithArg:
+		rewriteMethod: #methodWithRenamedArg:
 		by:  [ [ arg  ] -> [ renamedArg  ] ]
 ]
 

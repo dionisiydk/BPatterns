@@ -17,6 +17,12 @@ BPatternMethodNode class >> selector: aSymbol keywordsPositions: positionList ar
 		yourself
 ]
 
+{ #category : 'initialization' }
+BPatternMethodNode >> beList [
+	
+	isList := true
+]
+
 { #category : 'converting' }
 BPatternMethodNode >> bePatternNode [
 	^self
@@ -26,6 +32,7 @@ BPatternMethodNode >> bePatternNode [
 BPatternMethodNode >> initialize [ 
 	super initialize.
 	
+	self beList.
 	patternKeywords := #()
 ]
 
@@ -59,4 +66,10 @@ BPatternMethodNode >> patternKeywords [
 BPatternMethodNode >> patternKeywords: anObject [
 
 	patternKeywords := anObject
+]
+
+{ #category : 'initialization' }
+BPatternMethodNode >> selector: aSymbol keywordsPositions: positionList arguments: valueNodes [
+	super selector: aSymbol keywordsPositions: positionList arguments: valueNodes.
+	self beList.
 ]

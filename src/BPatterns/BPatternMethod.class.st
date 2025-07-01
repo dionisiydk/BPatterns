@@ -27,9 +27,14 @@ BPatternMethod >> bpattern: varSpecs [
 
 { #category : 'private' }
 BPatternMethod >> buildPatternAST [
-	| methodAssoc bodyPattern headerPattern messageAST |
+	| methodAssoc bodyPattern headerPattern messageAST anyTemps |
 	methodAssoc := definitionBlock valueWithArguments: (Array new: definitionBlock numArgs).
 	bodyPattern := methodAssoc value bpattern adoptToSequenceNode.
+	bodyPattern patternAST hasTemporaries ifFalse: [ 
+		anyTemps := bodyPattern patternAST addTemporaryNamed: 'anyTemps'.
+		anyTemps bePatternNode.
+		anyTemps beList.
+	 ]. 
 	headerPattern := methodAssoc key bpattern adoptToSequenceNode.
 	messageAST := headerPattern patternAST sendNodes first.
 	

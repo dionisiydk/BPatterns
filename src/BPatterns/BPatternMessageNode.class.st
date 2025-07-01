@@ -9,6 +9,11 @@ Class {
 }
 
 { #category : 'initialization' }
+BPatternMessageNode >> beList [
+	isList := true
+]
+
+{ #category : 'initialization' }
 BPatternMessageNode >> initialize [ 
 	super initialize.
 	
