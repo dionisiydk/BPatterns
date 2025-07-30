@@ -195,7 +195,7 @@ BPatternRewriteTest >> testRewriteForMethods [
 
 { #category : 'tests on methods' }
 BPatternRewriteTest >> testRewriteForMethodsUsingNoArgsPattern [
-	self skip: 'TODO: unary anyMessage should be list by default (matching any args count)'.
+
 	self 
 		rewriteMethod: #recursionMethod:with:
 		by: [:method :stmts | 
@@ -211,11 +211,11 @@ BPatternRewriteTest >> testRewriteForMethodsWithTempRename [
 
 	self 
 		rewriteMethod: #recursionMethodByRenamedTemp:with:
-		by: [:method :stmts :vars | 
-			[[ method anyMessage: vars ] -> [| tempA tempB | ^tempA + tempB ]] bmethod 
+		by: [:method :stmts | 
+			[[ method anyMessage ] -> [| tempA tempB | ^tempA + tempB ]] bmethod 
 				->
-			[[ method anyMessage: vars ] -> [| tempC tempB | ^tempC + tempB ]] bmethod
-				bpattern: #anyMessage: 
+			[[ method anyMessage ] -> [| tempC tempB | ^tempC + tempB ]] bmethod
+				bpattern
 		]
 ]
 
@@ -224,11 +224,11 @@ BPatternRewriteTest >> testRewriteForMethodsWithTempsWithoutTempsInPattern [
 
 	self 
 		rewriteMethod: #recursionMethodWithTemps:with:
-		by: [:method :stmts :vars | 
-			[[ method anyMessage: vars ] -> [ stmts. self anyMessage: vars ]] bmethod 
+		by: [:method :stmts  | 
+			[[ method anyMessage ] -> [ stmts. self anyMessage ]] bmethod 
 				->
-			[[ method anyMessage: vars ] -> [ [ stmts ] repeat ]] bmethod
-				bpattern: #anyMessage: -> [ :p| p beList ]
+			[[ method anyMessage ] -> [ [ stmts ] repeat ]] bmethod
+				bpattern: #anyMessage -> [ :p| p beList ]
 		]
 ]
 

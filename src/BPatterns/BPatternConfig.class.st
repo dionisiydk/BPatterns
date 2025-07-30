@@ -2,7 +2,6 @@ Class {
 	#name : 'BPatternConfig',
 	#superclass : 'Object',
 	#instVars : [
-		'targetNodeClass',
 		'patternNames',
 		'definitionBlock'
 	],
@@ -17,6 +16,13 @@ BPatternConfig class >> forMessageNodesFrom: selectorOrArray definedBy: configNo
 	selectors := selectorOrArray isSymbol ifTrue: [ { selectorOrArray} ] ifFalse: [ selectorOrArray ].
 	selectors ifEmpty: [ self error: 'Selectors should not be empty!' ].
 	^BPatternMessageConfig forPatternNames: selectors definedBy: configNodeBlock.
+]
+
+{ #category : 'instance creation' }
+BPatternConfig class >> forPatternNames: names [
+
+	^self new 
+		patternNames: names
 ]
 
 { #category : 'instance creation' }
@@ -86,6 +92,13 @@ BPatternConfig >> definitionBlock [
 BPatternConfig >> definitionBlock: anObject [
 
 	definitionBlock := anObject
+]
+
+{ #category : 'initialization' }
+BPatternConfig >> initialize [ 
+	super initialize.
+	
+	patternNames := #()
 ]
 
 { #category : 'testing' }

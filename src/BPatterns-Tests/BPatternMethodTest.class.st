@@ -11,7 +11,7 @@ BPatternMethodTest >> testCreationFromBlockWithMultipleStatements [
 	block := [ :arg :stmps | [ self someMessage: arg ] -> [ stmps.  ^arg printString ]].
 	actual := block bmethod.
 	
-	self assert: actual class equals: BPatternMethod.
+	self assert: actual class equals: BPattern.
 	self assert: actual definitionBlock identicalTo: block.
 	self assert: actual patternAST body class equals: OCSequenceNode.
 	self assert: actual patternAST body statements size equals: 2.
@@ -23,7 +23,7 @@ BPatternMethodTest >> testCreationFromBlockWithSelectorPatterns [
 	block := [ :arg :arg2 | [ self anyMessage: arg nonPatternPart: arg2 ] -> [ ^arg printString ]].
 	actual := block bmethod bpattern: #(anyMessage:).
 	
-	self assert: actual class equals: BPatternMethod.
+	self assert: actual class equals: BPattern.
 	self assert: actual definitionBlock identicalTo: block.
 	self assert: actual patternAST class equals: BPatternMethodNode.
 	self assert: actual patternAST patternKeywords equals: #(#anyMessage:).
@@ -45,9 +45,9 @@ BPatternMethodTest >> testCreationFromBlockWithSelectorPatterns [
 BPatternMethodTest >> testCreationFromBlockWithoutSelectorPatterns [
 	| actual block allVarNodes patternVarNodes |
 	block := [ :arg | [ self someMessage: arg ] -> [ ^arg printString ]].
-	actual := block bmethod.
+	actual := block bmethod. 
 	
-	self assert: actual class equals: BPatternMethod.
+	self assert: actual class equals: BPattern.
 	self assert: actual definitionBlock identicalTo: block.
 	self assert: actual patternAST class equals: BPatternMethodNode.
 	self assert: actual patternAST patternKeywords isEmpty.

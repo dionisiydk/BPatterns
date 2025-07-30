@@ -17,6 +17,11 @@ BPatternMethodNode class >> selector: aSymbol keywordsPositions: positionList ar
 		yourself
 ]
 
+{ #category : 'as yet unclassified' }
+BPatternMethodNode >> anySelectorSymbol [
+	^#anySelector
+]
+
 { #category : 'initialization' }
 BPatternMethodNode >> beList [
 	
@@ -26,6 +31,27 @@ BPatternMethodNode >> beList [
 { #category : 'converting' }
 BPatternMethodNode >> bePatternNode [
 	^self
+]
+
+{ #category : 'matching' }
+BPatternMethodNode >> copyInContext: aDictionary [
+	| keywordSelector args |
+	keywordSelector := self isSelectorList
+		ifTrue: [ aDictionary at: self selector ]
+		ifFalse: [ ('' join:(self selectorParts collect: [ :each | aDictionary at: each ])) asSymbol  ].
+	args := self isSelectorList
+		ifTrue: [ (aDictionary at: self selector, '_args') copy ]
+		ifFalse: [ self copyList: self arguments inContext: aDictionary ].
+			
+	^ OCMethodNode new
+		selector: keywordSelector;
+		arguments: args;
+		pragmas: (self pragmas isEmpty
+			ifTrue: [ aDictionary at: '-pragmas-' ifAbsent: [ #() ] ]
+			ifFalse: [ self copyList: self pragmas inContext: aDictionary ]);
+		body: (self body copyInContext: aDictionary);
+		source: (aDictionary at: '-source-');
+		yourself
 ]
 
 { #category : 'initialization' }
@@ -39,6 +65,21 @@ BPatternMethodNode >> initialize [
 { #category : 'testing' }
 BPatternMethodNode >> isPatternKeyword: aString [ 
 	^patternKeywords includes: aString
+]
+
+{ #category : 'matching' }
+BPatternMethodNode >> match: aNode inContext: aDictionary [
+	aNode class = self matchingClass
+		ifFalse: [ ^ false ].
+	aDictionary at: '-source-' put: aNode source.
+	self isSelectorList ifTrue: [
+		^ (aDictionary at: self selector ifAbsentPut: [ aNode selector ]) = aNode selector
+			and: [ ((aDictionary at: self selector, '_args' ifAbsentPut: [ aNode arguments ]) = aNode arguments)
+			and: [ (self matchPragmas: self pragmas against: aNode pragmas inContext: aDictionary)
+			and: [ body match: aNode body inContext: aDictionary ] ] ] ].
+	^(self matchArgumentsAgainst: aNode inContext: aDictionary)
+		and: [ (self matchPragmas: self pragmas against: aNode pragmas inContext: aDictionary)
+		and: [ body match: aNode body inContext: aDictionary ] ]
 ]
 
 { #category : 'matching' }

@@ -2,7 +2,16 @@ Extension { #name : 'BlockClosure' }
 
 { #category : '*BPatterns' }
 BlockClosure >> bmethod [
-	^BPatternMethod fromBlock: self
+
+	| methodAssoc pattern |
+	methodAssoc := self valueWithArguments: (Array new: self numArgs).
+	pattern := methodAssoc value bpattern.
+	^pattern beMethod: methodAssoc key.
+]
+
+{ #category : '*BPatterns' }
+BlockClosure >> bmethodHeaderAST [
+	^self sourceNode body sendNodes first
 ]
 
 { #category : '*BPatterns' }

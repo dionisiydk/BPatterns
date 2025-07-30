@@ -16,6 +16,11 @@ BPatternMethod class >> fromBlock: aBlockClosure [
 ]
 
 { #category : 'converting' }
+BPatternMethod >> adoptToSequenceNode [
+	
+]
+
+{ #category : 'converting' }
 BPatternMethod >> bpattern [
 	^self
 ]
