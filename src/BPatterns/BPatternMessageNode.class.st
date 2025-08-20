@@ -8,18 +8,28 @@ Class {
 	#package : 'BPatterns'
 }
 
+{ #category : 'accessing' }
+BPatternMessageNode >> addPatternKeyword: aSymbol [
+	patternKeywords add: aSymbol
+]
+
+{ #category : 'accessing' }
+BPatternMessageNode >> addPatternKeywords: symbols [
+	patternKeywords addAll: symbols
+]
+
 { #category : 'converting' }
 BPatternMessageNode >> beCascadeList [ 
 	isCascadeList := true
 ]
 
-{ #category : 'initialization' }
-BPatternMessageNode >> beList [
-	isList := true
-]
-
 { #category : 'converting' }
 BPatternMessageNode >> bePatternNode [
+]
+
+{ #category : 'initialization' }
+BPatternMessageNode >> beSelectorList [
+	isList := true
 ]
 
 { #category : 'matching' }
@@ -43,7 +53,7 @@ BPatternMessageNode >> copyInContext: aDictionary [
 BPatternMessageNode >> initialize [ 
 	super initialize.
 	
-	patternKeywords := #()
+	patternKeywords := Set new
 ]
 
 { #category : 'matching' }

@@ -15,6 +15,13 @@ BPatternASTBuilder class >> configuredBy: configs [
 ]
 
 { #category : 'visiting' }
+BPatternASTBuilder >> applyConfigsFor: aNode [
+	patternConfigs 
+		select: [ :each | each isForNode: aNode ] 
+		thenDo: [ :each | 	each applyForNode: aNode ]
+]
+
+{ #category : 'visiting' }
 BPatternASTBuilder >> initialize [
 	super initialize.
 	
@@ -35,15 +42,20 @@ BPatternASTBuilder >> patternConfigs: anObject [
 
 { #category : 'visiting' }
 BPatternASTBuilder >> visitMessageNode: aMessageNode [
+	self applyConfigsFor: aMessageNode.
+	
 	self visitNode: aMessageNode receiver.
 	self visitNode: aMessageNode selectorNode.
 	aMessageNode arguments do: [ :each | self visitNode: each ]
 ]
 
 { #category : 'visiting' }
-BPatternASTBuilder >> visitNode: aNode [
-	patternConfigs 
-		select: [ :each | each isForNode: aNode ] 
-		thenDo: [ :each | each applyForNode: aNode ].
-	^ super visitNode: aNode
+BPatternASTBuilder >> visitMethodNode: aMethodNode [
+	self applyConfigsFor: aMethodNode.
+	super visitMethodNode: aMethodNode
+]
+
+{ #category : 'visiting' }
+BPatternASTBuilder >> visitVariableNode: aNode [
+	self applyConfigsFor: aNode 
 ]

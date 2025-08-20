@@ -11,7 +11,7 @@ BPatternConfigTest >> testPrinting [
 	| configs patternVar |
 	configs := BPatternConfig readFromSpecs: [ patternVar ].
 	
-	self assert: configs first printString equals: 'a BPatternVarConfig(patternVar)'
+	self assert: configs first printString equals: 'a BPatternPluggableVarConfig(patternVar)'
 ]
 
 { #category : 'tests' }
@@ -21,11 +21,11 @@ BPatternConfigTest >> testReadingFromSpecsAsArrayOfBlockVars [
 	configs := BPatternConfig readFromSpecs: { [ patternVar ] . [ patternVar2 ] }.
 	
 	self assert: configs size equals: 2.
-	self assert: configs first class equals: BPatternVarConfig.
-	self assert: configs first patternNames asArray equals: #('patternVar').
+	self assert: configs first class equals: BPatternPluggableVarConfig.
+	self assert: configs first patternVars asArray equals: #('patternVar').
 	self assert: configs first definitionBlock isNil.
-	self assert: configs first class equals: BPatternVarConfig.
-	self assert: configs second patternNames asArray equals: #('patternVar2').
+	self assert: configs first class equals: BPatternPluggableVarConfig.
+	self assert: configs second patternVars asArray equals: #('patternVar2').
 	self assert: configs second definitionBlock isNil
 ]
 
@@ -37,8 +37,8 @@ BPatternConfigTest >> testReadingFromSpecsAsArrayWithBlockVarAssoc [
 	configs := BPatternConfig readFromSpecs: { [ patternVar ] -> configBlock }.
 	
 	self assert: configs size equals: 1.
-	self assert: configs first class equals: BPatternVarConfig.
-	self assert: configs first patternNames asArray equals: #('patternVar').
+	self assert: configs first class equals: BPatternPluggableVarConfig.
+	self assert: configs first patternVars asArray equals: #('patternVar').
 	self assert: configs first definitionBlock identicalTo: configBlock
 ]
 
@@ -49,8 +49,22 @@ BPatternConfigTest >> testReadingFromSpecsAsBlockWithMultipleVars [
 	configs := BPatternConfig readFromSpecs: [ patternVar. patternVar2 ].
 	
 	self assert: configs size equals: 1.
-	self assert: configs first class equals: BPatternVarConfig.
-	self assert: configs first patternNames asArray equals: #('patternVar' 'patternVar2').
+	self assert: configs first class equals: BPatternPluggableVarConfig.
+	self assert: configs first patternVars asArray equals: #('patternVar' 'patternVar2').
+
+]
+
+{ #category : 'tests' }
+BPatternConfigTest >> testReadingFromSpecsAsKeywordSelectors [
+	
+	| configs |
+	configs := BPatternConfig readFromSpecs: #(someMessage:part2: some2:part2:).
+	
+	self assert: configs size equals: 2.
+	self assert: configs first class equals: BPatternPluggableSelectorConfig.
+	self assert: configs first patternKeywords asArray equals: #(someMessage: part2:).
+	self assert: configs first class equals: BPatternPluggableSelectorConfig.
+	self assert: configs second patternKeywords asArray equals: #(some2: part2:).
 
 ]
 
@@ -61,10 +75,10 @@ BPatternConfigTest >> testReadingFromSpecsAsSelectors [
 	configs := BPatternConfig readFromSpecs: #(selector1 selector2).
 	
 	self assert: configs size equals: 2.
-	self assert: configs first class equals: BPatternMessageConfig.
-	self assert: configs first patternNames asArray equals: #(selector1).
-	self assert: configs first class equals: BPatternMessageConfig.
-	self assert: configs second patternNames asArray equals: #(selector2).
+	self assert: configs first class equals: BPatternPluggableSelectorConfig.
+	self assert: configs first patternKeywords asArray equals: #(selector1).
+	self assert: configs first class equals: BPatternPluggableSelectorConfig.
+	self assert: configs second patternKeywords asArray equals: #(selector2).
 
 ]
 
@@ -76,8 +90,8 @@ BPatternConfigTest >> testReadingFromSpecsAsSingleAssocForBlockVar [
 	configs := BPatternConfig readFromSpecs: [ patternVar ] -> configBlock.
 	
 	self assert: configs size equals: 1.
-	self assert: configs first class equals: BPatternVarConfig.
-	self assert: configs first patternNames asArray equals: #('patternVar').
+	self assert: configs first class equals: BPatternPluggableVarConfig.
+	self assert: configs first patternVars asArray equals: #('patternVar').
 	self assert: configs first definitionBlock identicalTo: configBlock
 ]
 
@@ -89,8 +103,8 @@ BPatternConfigTest >> testReadingFromSpecsAsSingleAssocForSelector [
 	configs := BPatternConfig readFromSpecs: #selector1 -> configBlock.
 	
 	self assert: configs size equals: 1.
-	self assert: configs first class equals: BPatternMessageConfig.
-	self assert: configs first patternNames asArray equals: #(selector1).
+	self assert: configs first class equals: BPatternPluggableSelectorConfig.
+	self assert: configs first patternKeywords asArray equals: #(selector1).
 	self assert: configs first definitionBlock identicalTo: configBlock
 ]
 
@@ -102,7 +116,7 @@ BPatternConfigTest >> testReadingFromSpecsAsSingleAssocForSelectors [
 	configs := BPatternConfig readFromSpecs: #(selector1 selector2) -> configBlock.
 	
 	self assert: configs size equals: 1.
-	self assert: configs first class equals: BPatternMessageConfig.
-	self assert: configs first patternNames asArray equals: #(selector1 selector2).
+	self assert: configs first class equals: BPatternPluggableSelectorConfig.
+	self assert: configs first patternKeywords asArray equals: #(selector1 selector2).
 	self assert: configs first definitionBlock identicalTo: configBlock
 ]

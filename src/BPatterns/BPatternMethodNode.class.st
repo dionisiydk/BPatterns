@@ -9,6 +9,25 @@ Class {
 }
 
 { #category : 'instance creation' }
+BPatternMethodNode class >> fromHeaderBlock: aBlockWithMessageSend body: aSequenceAST [
+	| messageAST |
+	messageAST := aBlockWithMessageSend sourceNode sendNodes first.	
+	^self fromMessageNode: messageAST body: aSequenceAST
+]
+
+{ #category : 'instance creation' }
+BPatternMethodNode class >> fromMessageNode: headerMessageNode body: bodySequenceNode [
+	| methodNode |
+	methodNode := self 
+		selector: headerMessageNode selector
+		keywordsPositions: headerMessageNode keywordsPositions
+		arguments: (headerMessageNode arguments collect: [:each | each copy ]).
+	methodNode body: bodySequenceNode.
+	methodNode adoptTemps.
+	^methodNode
+]
+
+{ #category : 'instance creation' }
 BPatternMethodNode class >> selector: aSymbol keywordsPositions: positionList arguments: valueNodes [
 	^self new
 		selector: aSymbol
@@ -17,20 +36,35 @@ BPatternMethodNode class >> selector: aSymbol keywordsPositions: positionList ar
 		yourself
 ]
 
-{ #category : 'as yet unclassified' }
-BPatternMethodNode >> anySelectorSymbol [
-	^#anySelector
+{ #category : 'accessing' }
+BPatternMethodNode >> addPatternKeyword: aSymbol [ 
+	patternKeywords add: aSymbol
+]
+
+{ #category : 'accessing' }
+BPatternMethodNode >> addPatternKeywords: symbols [ 
+	patternKeywords addAll: symbols
 ]
 
 { #category : 'initialization' }
-BPatternMethodNode >> beList [
-	
-	isList := true
+BPatternMethodNode >> adoptTemps [
+	| anyTemps |
+	body hasTemporaries ifTrue: [ ^self ].
+	"By default if the pattern does not explicitly define temps it will match any number of temps"
+	anyTemps := body addTemporaryNamed: 'anyTemps'.
+	anyTemps bePatternNode.
+	anyTemps beList.
 ]
 
 { #category : 'converting' }
 BPatternMethodNode >> bePatternNode [
 	^self
+]
+
+{ #category : 'initialization' }
+BPatternMethodNode >> beSelectorList [
+	
+	isList := true
 ]
 
 { #category : 'matching' }
@@ -57,9 +91,8 @@ BPatternMethodNode >> copyInContext: aDictionary [
 { #category : 'initialization' }
 BPatternMethodNode >> initialize [ 
 	super initialize.
-	
-	self beList.
-	patternKeywords := #()
+
+	patternKeywords := Set new
 ]
 
 { #category : 'testing' }
@@ -107,10 +140,4 @@ BPatternMethodNode >> patternKeywords [
 BPatternMethodNode >> patternKeywords: anObject [
 
 	patternKeywords := anObject
-]
-
-{ #category : 'initialization' }
-BPatternMethodNode >> selector: aSymbol keywordsPositions: positionList arguments: valueNodes [
-	super selector: aSymbol keywordsPositions: positionList arguments: valueNodes.
-	self beList.
 ]

@@ -7,6 +7,7 @@ OCVariableNode >> bePatternNode [
 	patternNode 
 		parent: parent; 
 		variable: variable;
-		isAnything: true.
+		isAnything: true;
+		beRecursive.
 	patternNode become: self
 ]

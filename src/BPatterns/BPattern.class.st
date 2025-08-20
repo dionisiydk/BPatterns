@@ -2,7 +2,6 @@ Class {
 	#name : 'BPattern',
 	#superclass : 'Object',
 	#instVars : [
-		'definitionBlock',
 		'patternAST',
 		'configs',
 		'isConfigured'
@@ -12,9 +11,20 @@ Class {
 }
 
 { #category : 'instance creation' }
-BPattern class >> fromBlock: aBlockClosure [ 
+BPattern class >> fromAST: anASTNode [ 
 	^self new 
-		definitionBlock: aBlockClosure 
+		patternAST: anASTNode
+]
+
+{ #category : 'instance creation' }
+BPattern class >> fromBlock: definitionBlock [ 
+	| definitionAST patternAST |
+	definitionAST := definitionBlock sourceNode.
+	patternAST := (definitionAST statements size == 1 and: [ definitionAST temporaries isEmpty ])
+		  ifTrue: [ definitionAST statements first ]
+		  ifFalse: [ definitionAST body ].
+	^self fromAST: patternAST
+	
 ]
 
 { #category : 'converting' }
@@ -33,21 +43,11 @@ BPattern >> applyConfigs [
 
 { #category : 'converting' }
 BPattern >> beMethod: headerBlock [
-	| anyTemps messageAST methodAST |
 	self adoptToSequenceNode.
-	patternAST hasTemporaries ifFalse: [ 
-		anyTemps := patternAST addTemporaryNamed: 'anyTemps'.
-		anyTemps bePatternNode.
-		anyTemps beList.
-	]. 
-	messageAST := headerBlock bmethodHeaderAST.	
-	methodAST := BPatternMethodNode 
-		selector: messageAST selector
-		keywordsPositions: messageAST keywordsPositions 
-		arguments: messageAST arguments.
-	methodAST body: patternAST.
-	patternAST := methodAST.
-	configs add: (BPatternMessageConfig forPatternNames: {messageAST selector})
+	patternAST := BPatternMethodNode 
+						fromHeaderBlock: headerBlock 
+						body: patternAST.
+
 ]
 
 { #category : 'converting' }
@@ -60,18 +60,7 @@ BPattern >> bpattern: varSpecs [
 	^self configureBy: varSpecs
 ]
 
-{ #category : 'private' }
-BPattern >> buildPatternAST [
-	
-	| definitionAST |
-	definitionAST := definitionBlock sourceNode.
-	patternAST := (definitionAST statements size == 1 and: [ definitionAST temporaries isEmpty ])
-		  ifTrue: [ definitionAST statements first ]
-		  ifFalse: [ definitionAST body ].
-	patternAST := patternAST copy
-]
-
-{ #category : 'accessing' }
+{ #category : 'initialization' }
 BPattern >> configureBy: configSpecs [
 	
 	| patternConfigs |
@@ -79,26 +68,19 @@ BPattern >> configureBy: configSpecs [
 	configs addAll: patternConfigs
 ]
 
-{ #category : 'accessing' }
-BPattern >> definitionBlock [
-
-	^ definitionBlock
+{ #category : 'printing' }
+BPattern >> displayStringOn: aStream [
+	
+	aStream nextPutAll: patternAST formattedCode
 ]
 
-{ #category : 'accessing' }
-BPattern >> definitionBlock: anObject [
-
-	definitionBlock := anObject.
-	self buildPatternAST.
-	configs add: BPatternVarConfig forArguments
-]
-
-{ #category : 'accessing' }
+{ #category : 'initialization' }
 BPattern >> initialize [ 
 	super initialize.
-	
+
 	configs := OrderedCollection new.
-	isConfigured := false
+	isConfigured := false.
+	self useDefaultConfigs
 ]
 
 { #category : 'testing' }
@@ -113,9 +95,17 @@ BPattern >> patternAST [
 ]
 
 { #category : 'accessing' }
-BPattern >> patternAST: anObject [
+BPattern >> patternAST: anASTNode [
+	patternAST := anASTNode copy
+]
 
-	patternAST := anObject
+{ #category : 'printing' }
+BPattern >> printOn: aStream [
+	super printOn: aStream.
+	
+	aStream nextPut: $(.
+	self displayStringOn: aStream.
+	aStream nextPut: $)
 ]
 
 { #category : 'scanning' }
@@ -142,4 +132,10 @@ BPattern >> scanAST: anAST [
 	searcher executeTree: anAST.
 	^result
 	
+]
+
+{ #category : 'initialization' }
+BPattern >> useDefaultConfigs [
+	configs add: BPatternDefaultVarConfig new.
+	configs add: BPatternDefaultSelectorConfig new
 ]

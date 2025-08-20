@@ -64,12 +64,20 @@ BPatternRewriteTest >> testCreationFromBlock [
 	brewrite := block brewrite.
 	
 	self assert: brewrite class equals: BPatternRewrite.
-	self assert: brewrite definitionBlock identicalTo: block.
-	self assert: brewrite searchPattern definitionBlock sourceNode equals: searchBlock sourceNode.
-	self assert: brewrite rewritePattern definitionBlock sourceNode equals: rewriteBlock sourceNode.
+	self assert: brewrite searchPattern patternAST sourceCode equals: searchBlock sourceNode body sourceCode.
+	self assert: brewrite rewritePattern patternAST sourceCode equals: rewriteBlock sourceNode body sourceCode.
 	self assert: brewrite searchPattern patternAST variableNodes first isPatternNode.
 	self assert: brewrite rewritePattern patternAST variableNodes first isPatternNode.
 	self deny: block sourceNode variableNodes first isPatternNode "original AST was not modified"
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testPrinting [
+
+	| actual |
+	brewrite := [:a :b | [ a someMessage: b ]  -> [ b someMessage: a ]] brewrite.
+	actual := brewrite printString.
+	self assert: actual equals: 'a BPatternRewrite([ a someMessage: b ] -> [ b someMessage: a ])'
 ]
 
 { #category : 'tests' }
@@ -141,7 +149,6 @@ BPatternRewriteTest >> testRewriteForKeywordReplace [
 		rewriteAST: [ ^self foo: 1 put: 2 ]
 		by: [:rcvr :arg1 :arg2 | 
 			[ ^rcvr any: arg1 put: arg2 ] -> [ ^rcvr put: arg1 put: arg2 ]
-				bpattern: #any:
 		] 
 		compareTo: [ ^self put: 1 put: 2 ] 
 ]
@@ -151,10 +158,19 @@ BPatternRewriteTest >> testRewriteForKeywordReplaceShouldIgnoreUnmachedSelectors
 	self 
 		rewriteAST: [ ^self foo: 1 some: 2 ]
 		by: [:rcvr :arg1 :arg2 | 
-			[ ^rcvr any: arg1 put: arg2 ] -> [ ^rcvr put: arg1 put: arg2 ]
-				bpattern: #any:
+			[ ^rcvr any: arg1 put: arg2 ] -> [ ^rcvr put: arg1 put: arg2 ]				
 		] 
 		compareTo: [ ^self foo: 1 some: 2 ] 
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteForKeywordSwapWithPattern [
+	self 
+		rewriteAST: [ ^self foo: 1 put: 2 ]
+		by: [:rcvr :arg1 :arg2 | 
+			[ ^rcvr any: arg1 put: arg2 ] -> [ ^rcvr put: arg1 any: arg2 ]
+		] 
+		compareTo: [ ^self put: 1 foo: 2 ] 
 ]
 
 { #category : 'tests' }
@@ -174,23 +190,20 @@ BPatternRewriteTest >> testRewriteForMessageReplace [
 	self 
 		rewriteAST: [ self a: 1 c: 2; b ]
 		by: [:rcvr :arg1 :arg2 | 
-			[ rcvr any1: arg1 any2: arg2; any3 ] -> [ rcvr d: arg2 e: arg1; f. self halt ]
-				bpattern: #(any1:any2: any3)
+			[ rcvr part1: arg1 part2: arg2; another ] -> [ rcvr d: arg2 e: arg1; f. self someMessage ]
+				bpattern: #(part1:part2: another)
 		]
-		compareTo: [ self d: 2 e: 1; f. self halt ]
+		compareTo: [ self d: 2 e: 1; f. self someMessage ]
 ]
 
-{ #category : 'tests on methods' }
-BPatternRewriteTest >> testRewriteForMethods [
-
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteForMessageReplaceWithDefaultPatternSeletors [
 	self 
-		rewriteMethod: #recursionMethod:with:
-		by: [:method :stmts :vars | 
-			[[ method anyMessage: vars ] -> [ stmts. self anyMessage: vars ]] bmethod 
-				->
-			[[ method anyMessage: vars ] -> [ [ stmts ] repeat ]] bmethod
-				bpattern: #anyMessage: -> [ :p| p beList ]
+		rewriteAST: [ self a: 1 c: 2; b ]
+		by: [:rcvr :arg1 :arg2 | 
+			[ rcvr any1: arg1 any2: arg2; any3 ] -> [ rcvr d: arg2 e: arg1; f. self someMessage ]
 		]
+		compareTo: [ self d: 2 e: 1; f. self someMessage ]
 ]
 
 { #category : 'tests on methods' }
@@ -198,11 +211,10 @@ BPatternRewriteTest >> testRewriteForMethodsUsingNoArgsPattern [
 
 	self 
 		rewriteMethod: #recursionMethod:with:
-		by: [:method :stmts | 
-			[[ method anyMessage ] -> [ stmts. self anyMessage ]] bmethod 
+		by: [:stmts |
+			[[ self anyMessage ] -> [ stmts. self anyMessage ]] bmethod 
 				->
-			[[ method anyMessage ] -> [ [ stmts ] repeat ]] bmethod
-				bpattern: #anyMessage -> [ :p| p beList ]
+			[[ self anyMessage ] -> [ [ stmts ] repeat ]] bmethod
 		]
 ]
 
@@ -224,11 +236,10 @@ BPatternRewriteTest >> testRewriteForMethodsWithTempsWithoutTempsInPattern [
 
 	self 
 		rewriteMethod: #recursionMethodWithTemps:with:
-		by: [:method :stmts  | 
-			[[ method anyMessage ] -> [ stmts. self anyMessage ]] bmethod 
+		by: [:stmts  | 
+			[[ self anyMessage ] -> [ stmts. self anyMessage ]] bmethod 
 				->
-			[[ method anyMessage ] -> [ [ stmts ] repeat ]] bmethod
-				bpattern: #anyMessage -> [ :p| p beList ]
+			[[ self anyMessage ] -> [ [ stmts ] repeat ]] bmethod
 		]
 ]
 

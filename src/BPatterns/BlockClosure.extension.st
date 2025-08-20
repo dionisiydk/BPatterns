@@ -10,11 +10,6 @@ BlockClosure >> bmethod [
 ]
 
 { #category : '*BPatterns' }
-BlockClosure >> bmethodHeaderAST [
-	^self sourceNode body sendNodes first
-]
-
-{ #category : '*BPatterns' }
 BlockClosure >> bpattern [
 	^BPattern fromBlock: self
 ]

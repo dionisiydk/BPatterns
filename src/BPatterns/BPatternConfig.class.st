@@ -1,10 +1,6 @@
 Class {
 	#name : 'BPatternConfig',
 	#superclass : 'Object',
-	#instVars : [
-		'patternNames',
-		'definitionBlock'
-	],
 	#category : 'BPatterns',
 	#package : 'BPatterns'
 }
@@ -15,22 +11,7 @@ BPatternConfig class >> forMessageNodesFrom: selectorOrArray definedBy: configNo
 	| selectors |
 	selectors := selectorOrArray isSymbol ifTrue: [ { selectorOrArray} ] ifFalse: [ selectorOrArray ].
 	selectors ifEmpty: [ self error: 'Selectors should not be empty!' ].
-	^BPatternMessageConfig forPatternNames: selectors definedBy: configNodeBlock.
-]
-
-{ #category : 'instance creation' }
-BPatternConfig class >> forPatternNames: names [
-
-	^self new 
-		patternNames: names
-]
-
-{ #category : 'instance creation' }
-BPatternConfig class >> forPatternNames: names definedBy: nodeBlock [
-
-	^self new 
-		patternNames: names;
-		definitionBlock: nodeBlock
+	^BPatternPluggableSelectorConfig forSelectors: selectors definedBy: configNodeBlock.
 ]
 
 { #category : 'instance creation' }
@@ -46,7 +27,7 @@ BPatternConfig class >> forVarNodes: varNodes definedBy: configNodeBlock [
 	| vars |	
 	vars := varNodes collect: [ :each | each name ].
 	vars ifEmpty: [ self error: 'Pattern var block has no var!' ].
-	^BPatternVarConfig forPatternNames: vars definedBy: configNodeBlock.
+	^BPatternPluggableVarConfig forVarNames: vars definedBy: configNodeBlock.
 ]
 
 { #category : 'instance creation' }
@@ -55,6 +36,11 @@ BPatternConfig class >> forVarNodesFrom: blocksWithVars definedBy: configNodeBlo
 	| vars |	
 	vars := blocksWithVars flatCollect: [:eachBlock | eachBlock sourceNode variableNodes].
 	^self forVarNodes: vars definedBy: configNodeBlock
+]
+
+{ #category : 'instance creation' }
+BPatternConfig class >> isAbstract [ 
+	^self = BPatternConfig
 ]
 
 { #category : 'instance creation' }
@@ -78,53 +64,10 @@ BPatternConfig class >> readFromSpecs: anObjectOrArray [
 
 { #category : 'applying' }
 BPatternConfig >> applyForNode: anASTNode [
-	anASTNode bePatternNode.
-	definitionBlock ifNotNil: [ definitionBlock value: anASTNode ]
-]
-
-{ #category : 'accessing' }
-BPatternConfig >> definitionBlock [
-
-	^ definitionBlock
-]
-
-{ #category : 'accessing' }
-BPatternConfig >> definitionBlock: anObject [
-
-	definitionBlock := anObject
-]
-
-{ #category : 'initialization' }
-BPatternConfig >> initialize [ 
-	super initialize.
-	
-	patternNames := #()
+	anASTNode bePatternNode
 ]
 
 { #category : 'testing' }
 BPatternConfig >> isForNode: anASTNode [
 	^self subclassResponsibility 
-]
-
-{ #category : 'accessing' }
-BPatternConfig >> patternNames [
-
-	^ patternNames
-]
-
-{ #category : 'accessing' }
-BPatternConfig >> patternNames: anObject [
-
-	patternNames := anObject
-]
-
-{ #category : 'applying' }
-BPatternConfig >> printOn: aStream [
-	super printOn: aStream.
-	
-	aStream nextPut: $(.
-	patternNames 
-		do: [:each | aStream nextPutAll: each ] 
-		separatedBy: [ aStream nextPut: ', ' ].
-	aStream nextPut: $).
 ]

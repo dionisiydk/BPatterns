@@ -11,34 +11,42 @@ Class {
 }
 
 { #category : 'instance creation' }
-BPatternRewrite class >> fromBlock: aBlockClosure [ 
-	^self new 
-		definitionBlock: aBlockClosure 
-]
-
-{ #category : 'initialization' }
-BPatternRewrite >> buildPatternAST [
-	| ruleAssoc |
+BPatternRewrite class >> fromBlock: definitionBlock [
+	| ruleAssoc searchPattern rewritePattern |
 	ruleAssoc := definitionBlock valueWithArguments: (Array new: definitionBlock numArgs).
 	searchPattern := ruleAssoc key bpattern.
 	rewritePattern := ruleAssoc value bpattern.
+	^self fromPattern: searchPattern to: rewritePattern
+]
+
+{ #category : 'instance creation' }
+BPatternRewrite class >> fromPattern: searchPattern to: rewritePattern [
 	searchPattern isSequenceNode = rewritePattern isSequenceNode 
 		ifFalse: [ searchPattern isSequenceNode
 				ifTrue: [ rewritePattern adoptToSequenceNode ]
-				ifFalse: [ searchPattern adoptToSequenceNode ]]
+				ifFalse: [ searchPattern adoptToSequenceNode ]].
+	^self new 
+		searchPattern: searchPattern;
+		rewritePattern: rewritePattern 
 ]
 
-{ #category : 'accessing' }
-BPatternRewrite >> definitionBlock [
-
-	^ definitionBlock
+{ #category : 'rewriting' }
+BPatternRewrite >> displayStringOn: aStream [ 
+	
+	aStream nextPutAll: '[ '.
+	searchPattern displayStringOn: aStream.
+	aStream nextPutAll: ' ] -> [ '.
+	rewritePattern displayStringOn: aStream.
+	aStream nextPutAll: ' ]'
 ]
 
-{ #category : 'accessing' }
-BPatternRewrite >> definitionBlock: anObject [
-
-	definitionBlock := anObject.
-	self buildPatternAST
+{ #category : 'rewriting' }
+BPatternRewrite >> printOn: aStream [
+	super printOn: aStream.
+	
+	aStream nextPut: $(.
+	self displayStringOn: aStream.
+	aStream nextPut: $)
 ]
 
 { #category : 'rewriting' }

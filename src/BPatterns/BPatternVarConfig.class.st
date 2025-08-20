@@ -8,16 +8,9 @@ Class {
 	#package : 'BPatterns'
 }
 
-{ #category : 'instance creation' }
-BPatternVarConfig class >> forArguments [
-	^self new 
-		targetVariableClass: ArgumentVariable
-]
-
-{ #category : 'instance creation' }
-BPatternVarConfig class >> forWorkspace [
-	^self new 
-		targetVariableClass: OCDoItVariable
+{ #category : 'testing' }
+BPatternVarConfig class >> isAbstract [ 
+	^self = BPatternVarConfig
 ]
 
 { #category : 'initialization' }
@@ -30,8 +23,7 @@ BPatternVarConfig >> initialize [
 { #category : 'testing' }
 BPatternVarConfig >> isForNode: anASTNode [
 	anASTNode isVariable ifFalse: [ ^false ].
-	(anASTNode variable originalVar isKindOf: targetVariableClass) ifFalse: [ ^false ].
-	^patternNames isEmpty or: [ patternNames includes: anASTNode name ]
+	^anASTNode variable originalVar isKindOf: targetVariableClass
 ]
 
 { #category : 'accessing' }
