@@ -109,7 +109,7 @@ BPatternTest >> testCreationFromBlockWithExternalPatternVar [
 
 	| actual block allVarNodes patternVarNodes patternTemp |
 	block := [ | nonPatternVar | patternTemp isNil ifFalse: [ patternTemp printString. nonPatternVar ]].
-	actual := block bpattern: { [ patternTemp ] }.
+	actual := block bpattern: [ patternTemp ].
 	
 	self assert: actual class equals: BPattern.
 	self assert: actual patternAST sourceCode equals: block sourceNode body sourceCode.
@@ -154,7 +154,7 @@ BPatternTest >> testCreationFromBlockWithVarDefinitionBlock [
 
 	| actual block allVarNodes patternVarNodes patternTemp |
 	block := [ | nonPatternVar | patternTemp isNil ifFalse: [ patternTemp printString. nonPatternVar ]].
-	actual := block bpattern: { [ patternTemp ] -> [:pattern | pattern beStatement ] }.
+	actual := block bpattern: [ patternTemp ] -> [:pattern | pattern beStatement ].
 	
 	self assert: actual class equals: BPattern.
 	self assert: actual patternAST sourceCode equals: block sourceNode body sourceCode.

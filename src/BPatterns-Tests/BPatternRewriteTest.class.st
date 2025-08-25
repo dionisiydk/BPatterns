@@ -227,7 +227,6 @@ BPatternRewriteTest >> testRewriteForMethodsWithTempRename [
 			[[ method anyMessage ] -> [| tempA tempB | ^tempA + tempB ]] bmethod 
 				->
 			[[ method anyMessage ] -> [| tempC tempB | ^tempC + tempB ]] bmethod
-				bpattern
 		]
 ]
 
@@ -258,7 +257,7 @@ BPatternRewriteTest >> testRewriteForTempRenameOfAssignment [
 	| a b |
 	self 
 		rewriteAST: [ a := self a  ]
-		by: [ 	[ a  ] -> [ b  ] ]
+		by: [ 	[ a ] -> [ b ] ]
 		compareTo: [ b := self a ]
 ]
 
@@ -268,7 +267,7 @@ BPatternRewriteTest >> testRewriteForTempRenameOfMessageReceiver [
 	| a b |
 	self 
 		rewriteAST: [ a printString  ]
-		by: [ 	[ a  ] -> [ b  ] ]
+		by: [ 	[ a ] -> [ b ] ]
 		compareTo: [ b printString ]
 ]
 
@@ -278,7 +277,7 @@ BPatternRewriteTest >> testRewriteMethodForArgRename [
 	| arg renamedArg |
 	self 
 		rewriteMethod: #methodWithRenamedArg:
-		by:  [ [ arg  ] -> [ renamedArg  ] ]
+		by:  [ [ arg ] -> [ renamedArg ] ]
 ]
 
 { #category : 'tests on methods' }
@@ -297,6 +296,6 @@ BPatternRewriteTest >> testRewriteMultipleExpressions [
 	| bar a b c |
 	self 
 		rewriteAST: [ self foo: 1. bar foo1 foo: 2. (self foo: a) foo: (b foo: c)]
-		by: [:rcv :arg | 	[ rcv foo: arg  ] -> [ rcv bar: arg ] ]
+		by: [:rcv :arg | [ rcv foo: arg ] -> [ rcv bar: arg ] ]
 		compareTo: [self bar: 1. bar foo1 bar: 2. (self bar: a) bar: (b bar: c)]
 ]

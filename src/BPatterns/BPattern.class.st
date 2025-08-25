@@ -126,7 +126,7 @@ BPattern >> scanAST: anAST [
 	| searcher result |
 	
 	searcher := OCParseTreeSearcher new.
-	searcher addRule: (OCSearchRule new 
+	searcher addRule: (BPatternSearchRule new 
 			searchTree: self patternAST;
 			answerBlock: [ :aNode :answer | result := searcher context ]).
 	searcher executeTree: anAST.
