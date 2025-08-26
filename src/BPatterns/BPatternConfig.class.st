@@ -1,41 +1,41 @@
 Class {
 	#name : 'BPatternConfig',
 	#superclass : 'Object',
+	#instVars : [
+		'nodeConfigBlock'
+	],
 	#category : 'BPatterns',
 	#package : 'BPatterns'
 }
 
 { #category : 'instance creation' }
-BPatternConfig class >> forMessageNodesFrom: selectorOrArray definedBy: configNodeBlock [
+BPatternConfig class >> forPatternNamesFrom: symbolsOrStringsOrBlocks configuredBy: configBlock [
+	"symbols configure concrete pattern messages
+	strings configure concrete variable names
+	blocks configure all variables referenced inside them"
+	^symbolsOrStringsOrBlocks first isSymbol 
+		ifTrue: [ self forSelectorsFrom: symbolsOrStringsOrBlocks configuredBy: configBlock ]	
+		ifFalse: [ self forVarsFrom: symbolsOrStringsOrBlocks configuredBy: configBlock ]
+]
+
+{ #category : 'instance creation' }
+BPatternConfig class >> forSelectorsFrom: selectorOrArray configuredBy: configNodeBlock [
 
 	| selectors |
 	selectors := selectorOrArray isSymbol ifTrue: [ { selectorOrArray} ] ifFalse: [ selectorOrArray ].
-	selectors ifEmpty: [ self error: 'Selectors should not be empty!' ].
-	^BPatternPluggableSelectorConfig forSelectors: selectors definedBy: configNodeBlock.
+	^BPatternSpecificSelectorsConfig forSelectors: selectors configuredBy: configNodeBlock.
 ]
 
 { #category : 'instance creation' }
-BPatternConfig class >> forPatternNamesFrom: symbolsOrBlocks definedBy: configBlock [
-	^symbolsOrBlocks first isSymbol 
-		ifTrue: [ self forMessageNodesFrom: symbolsOrBlocks definedBy: configBlock ]	
-		ifFalse: [ self forVarNodesFrom: symbolsOrBlocks definedBy: configBlock ]
-]
-
-{ #category : 'instance creation' }
-BPatternConfig class >> forVarNodes: varNodes definedBy: configNodeBlock [
+BPatternConfig class >> forVarsFrom: blocksWithVarsAndVars configuredBy: configNodeBlock [
 
 	| vars |	
-	vars := varNodes collect: [ :each | each name ].
-	vars ifEmpty: [ self error: 'Pattern var block has no var!' ].
-	^BPatternPluggableVarConfig forVarNames: vars definedBy: configNodeBlock.
-]
-
-{ #category : 'instance creation' }
-BPatternConfig class >> forVarNodesFrom: blocksWithVars definedBy: configNodeBlock [
-
-	| vars |	
-	vars := blocksWithVars flatCollect: [:eachBlock | eachBlock sourceNode variableNodes].
-	^self forVarNodes: vars definedBy: configNodeBlock
+	vars := OrderedCollection new.
+	blocksWithVarsAndVars do: [:eachBlockOrVar | 
+		eachBlockOrVar isString 
+			ifTrue: [ vars add: eachBlockOrVar ]
+			ifFalse: [ eachBlockOrVar sourceNode variableNodes do: [:each | vars add: each name ]]].
+	^BPatternSpecificVarsConfig forVars: vars configuredBy: configNodeBlock
 ]
 
 { #category : 'instance creation' }
@@ -52,7 +52,7 @@ BPatternConfig class >> readFromSingleSpec: anObjectOrAssoc [
 			configBlock := anObjectOrAssoc value ]
 		ifFalse: [ objectsWithPatternNames := anObjectOrAssoc ].
 	objectsWithPatternNames isArray ifFalse: [ objectsWithPatternNames := { objectsWithPatternNames } ].	
-	^self forPatternNamesFrom: objectsWithPatternNames definedBy: configBlock
+	^self forPatternNamesFrom: objectsWithPatternNames configuredBy: configBlock
 ]
 
 { #category : 'instance creation' }
@@ -64,10 +64,24 @@ BPatternConfig class >> readFromSpecs: anObjectOrArray [
 
 { #category : 'applying' }
 BPatternConfig >> applyForNode: anASTNode [
-	anASTNode bePatternNode
+	anASTNode bePatternNode.
+	
+	nodeConfigBlock ifNotNil: [ nodeConfigBlock value: anASTNode ]
 ]
 
 { #category : 'testing' }
 BPatternConfig >> isForNode: anASTNode [
 	^self subclassResponsibility 
+]
+
+{ #category : 'accessing' }
+BPatternConfig >> nodeConfigBlock [
+
+	^ nodeConfigBlock
+]
+
+{ #category : 'accessing' }
+BPatternConfig >> nodeConfigBlock: anObject [
+
+	nodeConfigBlock := anObject
 ]
