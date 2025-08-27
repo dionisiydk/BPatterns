@@ -27,6 +27,15 @@ BPattern class >> fromBlock: definitionBlock [
 	
 ]
 
+{ #category : 'comparing' }
+BPattern >> = anObject [
+	"Answer whether the receiver and anObject represent the same object."
+
+	self == anObject ifTrue: [ ^ true ].
+	self class = anObject class ifFalse: [ ^ false ].
+	^self patternAST = anObject patternAST
+]
+
 { #category : 'converting' }
 BPattern >> adoptToSequenceNode [ 
 	patternAST isSequence ifFalse: [ 
@@ -72,6 +81,11 @@ BPattern >> configureBy: configSpecs [
 BPattern >> displayStringOn: aStream [
 	
 	aStream nextPutAll: patternAST formattedCode
+]
+
+{ #category : 'comparing' }
+BPattern >> hash [
+	^self patternAST hash
 ]
 
 { #category : 'initialization' }
@@ -132,6 +146,17 @@ BPattern >> scanAST: anAST [
 	searcher executeTree: anAST.
 	^result
 	
+]
+
+{ #category : 'scanning' }
+BPattern >> scanAST: anAST do: nodeBlock [
+	| searcher |
+	
+	searcher := OCParseTreeSearcher new.
+	searcher addRule: (BPatternSearchRule new 
+			searchTree: self patternAST;
+			answerBlock: [ :aNode :answer | nodeBlock value: aNode ]).
+	searcher executeTree: anAST
 ]
 
 { #category : 'initialization' }

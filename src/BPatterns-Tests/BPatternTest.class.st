@@ -6,6 +6,19 @@ Class {
 }
 
 { #category : 'tests' }
+BPatternTest >> testComparison [
+
+	| bpattern anotherPattern |
+	bpattern := [ #someBlock1 ] bpattern.
+	self assert: bpattern = bpattern.
+	self assert: bpattern copy = bpattern.
+	self assert: bpattern copy hash equals: bpattern hash.
+	
+	anotherPattern := [ #anotherBlock ] bpattern.
+	self deny: bpattern = anotherPattern
+]
+
+{ #category : 'tests' }
 BPatternTest >> testCreationFromBlock [ 
 
 	| actual block allVarNodes patternVarNodes |
