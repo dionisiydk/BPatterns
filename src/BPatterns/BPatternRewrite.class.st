@@ -54,6 +54,11 @@ BPatternRewrite >> rewriteAST: anAST [
 	^searchPattern rewriteAST: anAST with: rewritePattern
 ]
 
+{ #category : 'rewriting' }
+BPatternRewrite >> rewriteMethod: aMethod [
+	^self rewriteAST: aMethod sourceNode copy
+]
+
 { #category : 'accessing' }
 BPatternRewrite >> rewritePattern [
 

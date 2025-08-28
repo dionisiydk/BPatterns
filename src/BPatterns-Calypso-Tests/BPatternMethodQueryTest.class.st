@@ -45,6 +45,7 @@ BPatternMethodQueryTest >> testDescription [
 
 { #category : 'tests' }
 BPatternMethodQueryTest >> testFromMethodScope [
+
 	self queryFromScope: ClyMethodScope ofAll: {(self class >> #exampleWithPattern) . (self class >> #exampleWithoutPattern)}.
 
 	self assert: resultItems size equals: 1.
