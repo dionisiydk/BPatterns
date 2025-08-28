@@ -37,5 +37,5 @@ BPatternRewrite >> previewForMethods: methods [
 	| changes preview |
 	changes := self changeForMethods: methods.
 	preview := StRefactoringPreviewPresenter for: changes scopes: {ClyNavigationEnvironment currentImageScope}.
-	preview open
+	preview openModal
 ]
