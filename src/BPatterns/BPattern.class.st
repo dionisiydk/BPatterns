@@ -102,6 +102,17 @@ BPattern >> isSequenceNode [
 	^patternAST isSequence
 ]
 
+{ #category : 'testing' }
+BPattern >> matchesAST: aNode [
+	self scanAST: aNode do: [ :each | ^true ].
+	^false
+]
+
+{ #category : 'testing' }
+BPattern >> matchesMethod: aMethod [
+	^self matchesAST: aMethod sourceNode
+]
+
 { #category : 'accessing' }
 BPattern >> patternAST [
 	isConfigured ifFalse: [ self applyConfigs ].
@@ -122,7 +133,7 @@ BPattern >> printOn: aStream [
 	aStream nextPut: $)
 ]
 
-{ #category : 'scanning' }
+{ #category : 'rewriting' }
 BPattern >> rewriteAST: originalAST with: rewritePattern [
 
 	| rewriter |
@@ -163,4 +174,27 @@ BPattern >> scanAST: anAST do: nodeBlock [
 BPattern >> useDefaultConfigs [
 	configs add: BPatternDefaultVarConfig new.
 	configs add: BPatternDefaultSelectorConfig new
+]
+
+{ #category : 'scanning' }
+BPattern >> users [
+
+	| result |
+	result := OrderedCollection new.
+	Smalltalk allClasses 
+		do:[:aClass| result addAll: (self usersInClass: aClass) ]
+		displayingProgress: 'Lookup for [', self displayString, ']'
+		every: 1000.
+	^result
+]
+
+{ #category : 'scanning' }
+BPattern >> usersInClass: aClass [
+	
+	| result |
+	result := OrderedCollection new.
+	aClass methodsDo: [:each | 	(self matchesMethod: each) ifTrue: [ result add: each ]].
+	aClass class methodsDo: [:each | 	(self matchesMethod: each) ifTrue: [ result add: each ]].
+	^result
+
 ]

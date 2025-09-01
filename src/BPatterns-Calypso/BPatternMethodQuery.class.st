@@ -76,7 +76,5 @@ BPatternMethodQuery >> printPattern [
 
 { #category : 'testing' }
 BPatternMethodQuery >> selectsMethod: aMethod [
-
-	pattern scanAST: aMethod sourceNode do: [ :each | ^true ].
-	^false
+	^pattern matchesMethod: aMethod
 ]

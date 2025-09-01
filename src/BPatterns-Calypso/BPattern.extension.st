@@ -35,15 +35,3 @@ BPattern >> browseUsersInScope: aScope [
 
 	^ClyQueryBrowserMorph openOn: (self asMethodQueryInScope: aScope)
 ]
-
-{ #category : '*BPatterns-Calypso' }
-BPattern >> users [
-
-	^self asMethodQuery execute rawItems
-]
-
-{ #category : '*BPatterns-Calypso' }
-BPattern >> usersInClass: aClass [
-
-	^(self asMethodQueryInClass: aClass) execute rawItems
-]
