@@ -2,7 +2,15 @@ Extension { #name : 'OCPatternVariableNode' }
 
 { #category : '*BPatterns' }
 OCPatternVariableNode >> beList [ 
+	isAnything := true.
 	isList := true
+]
+
+{ #category : '*BPatterns' }
+OCPatternVariableNode >> beLiteral [ 
+	isAnything := false.
+	isList := false.
+	isLiteral := true
 ]
 
 { #category : '*BPatterns' }
@@ -15,17 +23,22 @@ OCPatternVariableNode >> beRecursive [
 ]
 
 { #category : '*BPatterns' }
-OCPatternVariableNode >> beSingle [ 
-	isList := false
-]
-
-{ #category : '*BPatterns' }
 OCPatternVariableNode >> beStatement [ 
 	isAnything := false.
+	isList := false.
 	isStatement := true
 ]
 
 { #category : '*BPatterns' }
-OCPatternVariableNode >> isAnything: aBoolean [
-	isAnything := aBoolean
+OCPatternVariableNode >> beVariable [ 
+	isAnything := false.
+	isList := false.
+	isStatement := false.
+]
+
+{ #category : '*BPatterns' }
+OCPatternVariableNode >> prepareForBPattern [
+	isList := isLiteral := isStatement := recurseInto := false.
+	isAnything := true.
+	self beRecursive
 ]

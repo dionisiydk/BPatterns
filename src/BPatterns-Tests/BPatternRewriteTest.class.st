@@ -81,6 +81,24 @@ BPatternRewriteTest >> testPrinting [
 ]
 
 { #category : 'tests' }
+BPatternRewriteTest >> testRewriteForAnyLiteralReplace [
+	
+	self 
+		rewriteAST: [ 10 + 30 + instVar ]
+		by: [:any | 	[ any ] -> [ any * 2 ] bpattern: [ any ] -> [ :pattern | pattern beLiteral ]]
+		compareTo: [ (10 * 2) + (30 * 2) + instVar ]
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteForAnyVarRename [
+	
+	self 
+		rewriteAST: [ instVar printString ]
+		by: [:any | 	[ any ] -> [ instVarNewName ] bpattern: [ any ] -> [ :pattern | pattern beVariable ]]
+		compareTo: [ instVarNewName printString ]
+]
+
+{ #category : 'tests' }
 BPatternRewriteTest >> testRewriteForCascade [
 	self 
 		rewriteAST: [ self foo; printString; foo: 4; bar. self foo: 4 ]
@@ -95,8 +113,8 @@ BPatternRewriteTest >> testRewriteForCascade [
 BPatternRewriteTest >> testRewriteForConstantChange [
 
 	self 
-		rewriteAST: [ 3 + 4]
-		by: [[ 3  ] -> [ 4 ]]
+		rewriteAST: [ 3 + 4 ]
+		by: [[ 3 ] -> [ 4 ]]
 		compareTo: [ 4 + 4 ]
 ]
 
@@ -117,11 +135,20 @@ BPatternRewriteTest >> testRewriteForDuplicatesReplace [
 { #category : 'tests' }
 BPatternRewriteTest >> testRewriteForDynamicArray [
 	self 
-		rewriteAST: [  {(1 @ 255).	(Color lightMagenta). 3} ]
+		rewriteAST: [ {(1 @ 255). (Color lightMagenta). 3} ]
 		by: [:first :second :third | 
 			[ {first. second. third} ] -> [ Array with: first with: second with: third ]				
 		]
 		compareTo: [ Array with: 1 @ 255 with: Color lightMagenta with: 3 ]
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteForFullASTReplaceUsingPatternVar [
+
+	self 
+		rewriteAST: [ instVar printString ]
+		by: [:any |	[ any ] -> [ instVarNewName ]]
+		compareTo: [ instVarNewName  ]
 ]
 
 { #category : 'tests' }
@@ -135,11 +162,11 @@ BPatternRewriteTest >> testRewriteForIfNilRule [
 ]
 
 { #category : 'tests' }
-BPatternRewriteTest >> testRewriteForInstVarRename [
+BPatternRewriteTest >> testRewriteForInstVarRenameUsingConcreteVarName [
 
 	self 
-		rewriteAST: [  instVar printString  ]
-		by: [ 	[  instVar  ] -> [ instVarNewName  ] ]
+		rewriteAST: [ instVar printString ]
+		by: [ 	[ instVar ] -> [ instVarNewName ] ]
 		compareTo: [ instVarNewName printString ]
 ]
 
@@ -247,12 +274,12 @@ BPatternRewriteTest >> testRewriteForReturnReplace [
 
 	self 
 		rewriteAST: [ ^self foo value: 1  ]
-		by: [:anything | 	[ ^anything  ] -> [ self return: anything  ] ]
+		by: [:anything | [ ^anything  ] -> [ self return: anything ]]
 		compareTo: [ self return: (self foo value: 1) ]
 ]
 
 { #category : 'tests' }
-BPatternRewriteTest >> testRewriteForTempRenameOfAssignment [
+BPatternRewriteTest >> testRewriteForTempRenameInAssignment [
 
 	| a b |
 	self 
@@ -262,7 +289,7 @@ BPatternRewriteTest >> testRewriteForTempRenameOfAssignment [
 ]
 
 { #category : 'tests' }
-BPatternRewriteTest >> testRewriteForTempRenameOfMessageReceiver [
+BPatternRewriteTest >> testRewriteForTempRenameInMessageReceiver [
 
 	| a b |
 	self 
