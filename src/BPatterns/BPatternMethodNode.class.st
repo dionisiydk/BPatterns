@@ -74,12 +74,11 @@ BPatternMethodNode >> copyInContext: aDictionary [
 		ifTrue: [ aDictionary at: self selector ]
 		ifFalse: [ ('' join:(self selectorParts collect: [ :each | aDictionary at: each ])) asSymbol  ].
 	args := self isSelectorList
-		ifTrue: [ (aDictionary at: self selector, '_args') copy ]
-		ifFalse: [ self copyList: self arguments inContext: aDictionary ].
-			
+		ifTrue: [ (aDictionary at: self selector, '_args') ]
+		ifFalse: [ self arguments ].			
 	^ OCMethodNode new
 		selector: keywordSelector;
-		arguments: args;
+		arguments: (self copyList: args inContext: aDictionary );
 		pragmas: (self pragmas isEmpty
 			ifTrue: [ aDictionary at: '-pragmas-' ifAbsent: [ #() ] ]
 			ifFalse: [ self copyList: self pragmas inContext: aDictionary ]);

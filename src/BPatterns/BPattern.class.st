@@ -1,3 +1,87 @@
+"
+I represent an AST pattern which can be matched agains AST nodes.
+My instances are created from a pattern block:
+
+```Smalltalk
+	[:any :any2 | any isNil ifTrue: any2 ] bpattern
+```
+
+Once you have a bpattern you can browse the system to find all matching methods:
+
+```Smalltalk
+	[:any :any2 | any isNil ifTrue: any2 ] bpattern browseUsers.
+	[:any | any printString asString ] bpattern browseUsersInClass: BPatternMethodQueryTest.
+```
+
+And you can rewrite the matching methods using the another bpattern:
+
+```Smalltalk
+	[:any | 
+		[ any printString asString ] -> [ any printString ] 
+	] brewrite previewForClass: BPatternMethodQueryTest
+```
+See BPatternRewrite class for more details about the rewrite.
+
+AST of the bpattern block is used to construct the pattern nodes from the rewrite engine.
+Thus I allow to replace the rewrite syntax like:
+
+```Smalltalk
+	'``@rcvr isNil ifTrue: ``@arg'
+```	
+By default the block arguments define the pattern variables representing any node. This behaviour can be configured:
+
+```Smalltalk
+	[:any :any2 | any isNil ifTrue: any2 ] bpattern: 'any' -> [:pattern | pattern beVariable ]
+```
+
+Here is an example where #any pattern will match only variable nodes receiving #isNil message ('var someMessage isNil' will not be matched). See other config methods of OCPatternVariable for other options.
+
+Besides variables any selector can be configured as a pattern:
+
+```Smalltalk
+	[:any :anyAg1 :anyArg2 | any at: anyArg1 anyOtherKeyword: anyArg2 ] bpattern
+```
+It will match any message sends with a selector started with #at: keyword and an another second part.
+
+For a comparison the rewrite engine syntax for this example would look like:
+
+```Smalltalk
+	'``@rcvr at: ``@arg `msg2: ``@arg2'
+```
+
+For convenience any selectors and variables started with the word #any are traited as a pattern automatically. Other names require an explicit configuration:
+
+```Smalltalk
+	[:any :arg1 :arg2 | any at: arg1 otherKeyword: arg2 ] bpattern: #('arg1' 'arg2' #otherKeyword)
+```
+
+The block for the pattern config is optional. If you just need to inforce the pattern then no need to pass an empty block.
+
+For automatic message patterns the unary selector matches any type of selectors (unary, binary and keyword) and any arguments:
+
+```Smalltalk
+	[ instVar anyMessage printString ] bpattern
+```
+
+It will match expressions like:
+
+```Smalltalk
+	(instVar at: #key) printString.
+	instVar variable anotherVariable printString
+	(instVar + 1) printString
+```
+This behaviour differs from the rewrite engine where you have to specify arguments together with a selector:
+
+```Smalltalk
+	`self `@args: `@vars' 
+```
+
+
+
+
+
+
+"
 Class {
 	#name : 'BPattern',
 	#superclass : 'Object',

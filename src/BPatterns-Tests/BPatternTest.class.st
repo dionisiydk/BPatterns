@@ -200,7 +200,7 @@ BPatternTest >> testCreationFromBlockWithVarDefinitionBlock [
 	self assert: patternVarNodes notEmpty.
 	patternVarNodes do: [:each | 
 		self assert: each isPatternNode.
-		self assert: each isAnything.
+		self deny: each isAnything.
 		self assert: each isStatement.
 	].	 
 	(allVarNodes copyWithoutAll: patternVarNodes) do: [ :each |

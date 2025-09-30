@@ -36,17 +36,17 @@ BPatternMessageNode >> beSelectorList [
 BPatternMessageNode >> copyInContext: aDictionary [
 	| keywordSelector args |
 	self isList
-		ifTrue: [ ^ aDictionary at: self ].
+		ifTrue: [ ^aDictionary at: self ].
 	keywordSelector := self isSelectorList
 		ifTrue: [ aDictionary at: self selector ]
 		ifFalse: [ '' join: (self selectorParts collect: [ :each | aDictionary at: each ])].
 	args := self isSelectorList
-		ifTrue: [ (aDictionary at: self selector, '_args') copy ]
-		ifFalse: [ self copyList: self arguments inContext: aDictionary ].
+		ifTrue: [ (aDictionary at: self selector, '_args') ]
+		ifFalse: [ self arguments ].
 	^ OCMessageNode
 		receiver: (self receiver copyInContext: aDictionary)
 		selector: keywordSelector
-		arguments: args
+		arguments: (self copyList: args inContext: aDictionary)
 ]
 
 { #category : 'initialization' }
