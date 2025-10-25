@@ -42,6 +42,6 @@ BPatternSpecificVarsConfig >> printOn: aStream [
 	aStream nextPut: $(.
 	patternVars 
 		do: [:each | aStream nextPutAll: each ] 
-		separatedBy: [ aStream nextPut: ', ' ].
+		separatedBy: [ aStream nextPutAll: ', ' ].
 	aStream nextPut: $).
 ]

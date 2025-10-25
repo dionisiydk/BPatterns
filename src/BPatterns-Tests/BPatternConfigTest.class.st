@@ -8,10 +8,10 @@ Class {
 { #category : 'tests' }
 BPatternConfigTest >> testPrinting [
 	
-	| configs patternVar |
-	configs := BPatternConfig readFromSpecs: [ patternVar ].
+	| configs patternVar patternVar2 |
+	configs := BPatternConfig readFromSpecs: [ patternVar. patternVar2].
 	
-	self assert: configs first printString equals: 'a BPatternSpecificVarsConfig(patternVar)'
+	self assert: configs first printString equals: 'a BPatternSpecificVarsConfig(patternVar, patternVar2)'
 ]
 
 { #category : 'tests' }

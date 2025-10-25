@@ -1,3 +1,25 @@
+"
+I represent a source code rewrite rule using two pattern blocks:
+
+```Smalltalk
+	[:any :any2 | [ any isNil ifTrue: any2 ] -> [ any ifNil: any2 ]] brewrite
+```
+
+The main outer block encloses an association of two pattern blocks: the search pattern and the replace pattern. The arguments of the outer block represent the pattern variables so that both pattern blocks can reference them as normal variables. As result the #brewrite message creates my instance with two BPattern objects:
+
+```Smalltalk
+	BPatternREwrite fromPattern: searchPattern to: rewritePattern
+```
+
+Once you have a brewrite instance you can preview the system changes it represents and apply them using the refactoring UI:
+
+```Smalltalk
+	[:any :any2 | any isNil ifTrue: any2 ] brewrite preview.
+	[:any | [ any printString asString ] -> [ any printString ]] brewrite 
+		previewForClass: BPatternMethodQueryTest.
+```
+
+"
 Class {
 	#name : 'BPatternRewrite',
 	#superclass : 'Object',
