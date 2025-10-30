@@ -34,7 +34,8 @@ To narrow the filter represented by a pattern you have to configure it:
 	[ anyVar isNil ifTrue: anyBlock ] bpattern: [ anyVar ] -> [:pattern | pattern beVariable ]
 ```
 
-Here the #anyVar pattern will match only variables which are receivers of #isNil message.
+Blocks are used for variables to lexically reference them instead of using raw string names. 
+Here the #anyVar pattern name will match only variables which are receivers of #isNil message.
 For example it will match the following expression: 
 
 ```Smalltalk
@@ -49,31 +50,32 @@ But it will not match an expression where the receiver is an another message sen
 
 See other config methods of OCPatternVariable for other options.
 
-Applying such configuration for other non default objects they will be converted to the pattern:
+By using such a configuration for non default objects they will be converted to the pattern:
 
 ```Smalltalk
-	| var anyBlock |
-	[ var isNil ifTrue: anyBlock ] bpattern: [ var ] -> [:pattern | pattern beVariable ]
+	| someVar anyBlock |
+	[ someVar isNil ifTrue: anyBlock ] bpattern: [ someVar ] -> [:pattern | pattern beVariable ]
 ```
 
-The config block is optional and to make a pattern object you can just reference it:
+Notice without the config block the #someVar object would only match variables named #someVar.
+
+The config block is optional and to enforce the pattern object you can just reference it:
 
 ```Smalltalk
-	| var anyBlock |
-	[ var isNil ifTrue: anyBlock ] bpattern: [ var ]
+	| someVar anyBlock |
+	[ someVar isNil ifTrue: anyBlock ] bpattern: [ someVar ]
 ```
 
-In that case #var pattern will match ANY AST node like if it would be named #anyVar.
+In that case #someVar pattern will match ANY AST node like if it would be named #anyVar.
 
-For the arguments of #bpattern: message you can pass single element such as a block for varibales, an association for configuration or a symbol for selectors. And it can be an array of them:
+For the arguments of #bpattern: message you can pass single element such as a block for variables, an association for a configuration or a symbol for a selector. And it can be an array of them:
 
 ```Smalltalk
 	| any arg1 arg2 |
 	[ any at: arg1 otherKeyword: arg2 ] bpattern: {[arg1. arg2] -> [:pattern | pattern beVariable]. #otherKeyword}
 ```
 
-This example will match a message send with any receiver and variables as arguments and where a selector started with #at: and an arbitrary second keyword.
-Blocks are used for variables to lexically reference them instead of using raw string names. 
+This example will match a message send with any receiver and variables as arguments and where a selector starts with #at: and an arbitrary second keyword.
 
 Thus selectors can be also used as patterns:
 
@@ -87,28 +89,27 @@ For binary selectors you have to use the config block:
 
 ```Smalltalk
 	| any any2 |
+	[ any anyMessage: any2 ] bpattern: #anyMessage: -> [:pattern | pattern beBinary ].
+```
+
+Or you can configure any binary selector as a pattern:
+
+```Smalltalk
+	| any any2 |
 	[ any + any2 ] bpattern: #+.
 ```
 
-This pattern will match any expressions with any binary message lile #+, #-, #=, etc..
-You can add a configuration for the argument to find all binary expressions where the argument is a literal:
+Both examples will match any expression with any binary message lile #+, #-, #=, etc..
+
+To play a bit try to browse all messages where receiver and arguments are literals:
 
 ```Smalltalk
-	| any anyLiteral |
-	[ any + anyLiteral ] bpattern: {#+. [ anyLiteral ] -> [:pattern | pattern beLiteral ]}
-```
-----
-For other variables and selectors you have to explicitly configure them:
-
-Similar to variables the #any word is used for the default configuration. Any other pattern keywords have to be configured explicitly:
-
-```Smalltalk
-	[:any :anyAg1 :anyArg2 | any at: anyArg1 otherKeyword: anyArg2 ] bpattern: #otherKeyword
+	| anyRcv anyArg |
+	([ anyRcv + anyArg ] bpattern: {#+. [ anyRcv. anyArg ] -> [:pattern | pattern beLiteral ]})
+		browseUsers
 ```
 
-The block for the pattern config is optional. If you just need to enforce the pattern then no need to pass an empty block.
-
-For automatic message patterns the unary selector matches any type of selectors (unary, binary and keyword) and any arguments:
+The unary patterns are special. If an unary selector begins with any word it will match any type of messages (unary, binary and keyword) with any arguments. No need to reference arguments explicitly:
 
 ```Smalltalk
 	[ instVar anyMessage printString ] bpattern
@@ -122,61 +123,44 @@ It will match expressions like:
 	(instVar + 1) printString
 ```
 
-Internally the AST of a bpattern block is used to construct the pattern nodes from the rewrite engine.
-Thus I allow to replace the rewrite syntax like:
+Unary patterns are usefull to describe an arbitrary message sends. For example you can find all super calls with subsequent message sends:
 
 ```Smalltalk
-	'``@rcvr isNil ifTrue: ``@arg'
-```	
-
-Besides variables any selector can be used as a pattern:
-
-```Smalltalk
-	[:any :anyAg1 :anyArg2 | any at: anyArg1 anyOtherKeyword: anyArg2 ] bpattern
-```
-It will match any message sends with a selector started with #at: keyword and an another second part.
-
-For a comparison the rewrite engine syntax for this example would looks like:
-
-```Smalltalk
-	'``@rcvr at: ``@arg `msg2: ``@arg2'
+	[ super anySuperCall anyMessage ] bpattern browseUsers
 ```
 
-For convenience any selectors and variables started with the word #any are traited as a pattern automatically. Other names require an explicit configuration:
+Or find a potential bug due to missing dot at the and of super initialize:
 
 ```Smalltalk
-	[:any :arg1 :arg2 | any at: arg1 otherKeyword: arg2 ] bpattern: #('arg1' 'arg2' #otherKeyword)
+	[ super initialize 
+	anyVarAsMessage anyActualMessage ] bpattern browseUsers
 ```
 
-The block for the pattern config is optional. If you just need to inforce the pattern then no need to pass an empty block.
+When you need a pattern to match the unary type of messages then you have to configure it accordingly:
 
-For automatic message patterns the unary selector matches any type of selectors (unary, binary and keyword) and any arguments:
 
 ```Smalltalk
-	[ instVar anyMessage printString ] bpattern
+	([ super anySuperCall anyMessage ] bpattern: #anyMessage -> [:pattern | pattern beUnary ]) browseUsers
 ```
 
-It will match expressions like:
-
-```Smalltalk
-	(instVar at: #key) printString.
-	instVar variable anotherVariable printString
-	(instVar + 1) printString
-```
-This behaviour differs from the rewrite engine where you have to specify arguments together with a selector:
-
-```Smalltalk
-	`self `@args: `@vars' 
-```
-
-For some cases it is necessery to describe the pattern for the entire method including the method header. It can be achived using #bmethod DSL:
+Patterns defined by #bpattern message does not allow to describe methods using its header. To represent method nodes with a full method signature there are #bmethod expressions:
 
 ```Smalltalk
 	[:arg1 :arg2 :block | [ self methodName: arg1 part2: arg2 ] -> [ arg1 isNil ifTrue: block ]] bmethod
 ```
 
-Here the enclosing block of #bmethod returns an association of the method header pattern block and the method body pattern. The method header block must contains a single message send to any receiver. This message is extracted as a pattern for the method header.
-BMethod is still an instance of BPattern and therefore it can be used for the code search and rewrite:
+Here the enclosing block of #bmethod returns an association of a pattern block for the method header and a pattern block for the method body. By convention the method header should contain a single message send with any receiver. This message node is extracted as a pattern to describe the method header. The selector and arguments from a such header message can be used inside the body block:
+
+
+```Smalltalk
+		| anyFirstStatement otherStatements |
+		[[ self anyMessage ] -> [ anyFirstStatement. otherStatements. super anyMessage ]] bmethod 
+			configureBy: [otherStatements] -> [:p| p beList]; 
+			browseUsers
+```
+
+This pattern will find all methods with a super call after a sequence of other statements.
+The result of #bmethod is an instance of BPattern and therefore it can be used for the code search and rewrite:
 
 ```Smalltalk
 	[:stmts |
