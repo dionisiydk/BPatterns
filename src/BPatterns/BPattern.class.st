@@ -68,7 +68,7 @@ The config block is optional and to enforce the pattern object you can just refe
 
 In that case #someVar pattern will match ANY AST node like if it would be named #anyVar.
 
-For the arguments of #bpattern: message you can pass single element such as a block for variables, an association for a configuration or a symbol for a selector. And it can be an array of them:
+For the arguments of #bpattern: message you can pass a block for variables, an association for a configuration or a symbol for a selector. And it can be an array of them:
 
 ```Smalltalk
 	| any arg1 arg2 |
@@ -129,14 +129,7 @@ Unary patterns are usefull to describe an arbitrary message sends. For example y
 	[ super anySuperCall anyMessage ] bpattern browseUsers
 ```
 
-Or find a potential bug due to missing dot at the and of super initialize:
-
-```Smalltalk
-	[ super initialize 
-	anyVarAsMessage anyActualMessage ] bpattern browseUsers
-```
-
-When you need a pattern to match the unary type of messages then you have to configure it accordingly:
+When you need a pattern to match the unary type of messages you have to configure it explicitly:
 
 
 ```Smalltalk
@@ -146,16 +139,16 @@ When you need a pattern to match the unary type of messages then you have to con
 Patterns defined by #bpattern message does not allow to describe methods using its header. To represent method nodes with a full method signature there are #bmethod expressions:
 
 ```Smalltalk
-	[:arg1 :arg2 :block | [ self methodName: arg1 part2: arg2 ] -> [ arg1 isNil ifTrue: block ]] bmethod
+	| anyArg1 anyArg2 anyBlock |
+	[[ self anyMethodName: anyArg1 anyExtraKeyword: anyArg2 ] -> [ anyArg1 isNil ifTrue: anyBlock ]] bmethod
 ```
 
-Here the enclosing block of #bmethod returns an association of a pattern block for the method header and a pattern block for the method body. By convention the method header should contain a single message send with any receiver. This message node is extracted as a pattern to describe the method header. The selector and arguments from a such header message can be used inside the body block:
-
+Here the enclosing block of #bmethod returns an association of a pattern block for a method header and a pattern block for a method body. By convention the method header should contain single message send with any receiver. This message node is extracted as a pattern to describe the method header. The selector and arguments from such a header message can be used inside a body pattern:
 
 ```Smalltalk
 		| anyFirstStatement otherStatements |
 		[[ self anyMessage ] -> [ anyFirstStatement. otherStatements. super anyMessage ]] bmethod 
-			configureBy: [otherStatements] -> [:p| p beList]; 
+			configureBy: [otherStatements] -> [:pattern| p beList]; 
 			browseUsers
 ```
 
@@ -163,10 +156,10 @@ This pattern will find all methods with a super call after a sequence of other s
 The result of #bmethod is an instance of BPattern and therefore it can be used for the code search and rewrite:
 
 ```Smalltalk
-	[:stmts |
-			[[ self anyMessage ] -> [ stmts. self anyMessage ]] bmethod 
+	[:anyStmts |
+			[[ self anyMessage ] -> [ anyStmts. self anyMessage ]] bmethod 
 				->
-			[[ self anyMessage ] -> [ [ stmts ] repeat ]] bmethod
+			[[ self anyMessage ] -> [ [ anyStmts ] repeat ]] bmethod
 	] brewrite
 ```
 Here is a method pattern example which will find a simple recursion and replace it with the loop. The recursive call can be an any kind of message sends with any number of arguments.
