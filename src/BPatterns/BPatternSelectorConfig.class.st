@@ -11,12 +11,16 @@ BPatternSelectorConfig class >> isAbstract [
 ]
 
 { #category : 'applying' }
-BPatternSelectorConfig >> applyForNode: anASTNode [
-	super applyForNode: anASTNode.
-	
-	anASTNode keywords 
-		select: [ :each | self isForKeyword: each ]
-		thenDo: [ :each | anASTNode addPatternKeyword: each ]
+BPatternSelectorConfig >> applyForPatternNode: aMessagePatternNode [ "or aMethodPatternNode"
+	aMessagePatternNode selector isUnary ifTrue: [ 
+		"unary selector works as a selector list pattern by default.
+		It matches any kind of selector (unary, bunary and keyword) with any number of arguments"
+		aMessagePatternNode beSelectorList ].	
+	aMessagePatternNode keywords 
+		select: [ :each | self isForKeyword: each ] 
+		thenDo: [ :each | aMessagePatternNode addPatternKeyword: each ].		
+	super applyForPatternNode: aMessagePatternNode.	
+
 ]
 
 { #category : 'testing' }

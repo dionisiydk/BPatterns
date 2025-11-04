@@ -2,7 +2,8 @@ Class {
 	#name : 'BPatternMethodNode',
 	#superclass : 'OCPatternMethodNode',
 	#instVars : [
-		'patternKeywords'
+		'patternKeywords',
+		'filterBlock'
 	],
 	#category : 'BPatterns',
 	#package : 'BPatterns'
@@ -57,14 +58,24 @@ BPatternMethodNode >> adoptTemps [
 ]
 
 { #category : 'converting' }
+BPatternMethodNode >> beBinary [ 
+	filterBlock := [ :node | node selector isBinary ]
+]
+
+{ #category : 'converting' }
 BPatternMethodNode >> bePatternNode [
 	^self
 ]
 
 { #category : 'initialization' }
 BPatternMethodNode >> beSelectorList [
-	
 	isList := true
+]
+
+{ #category : 'converting' }
+BPatternMethodNode >> beUnary [ 
+	isList := false.
+	filterBlock := [ :node | node selector isUnary ]
 ]
 
 { #category : 'matching' }
@@ -87,6 +98,18 @@ BPatternMethodNode >> copyInContext: aDictionary [
 		yourself
 ]
 
+{ #category : 'accessing' }
+BPatternMethodNode >> filterBlock [
+
+	^ filterBlock
+]
+
+{ #category : 'accessing' }
+BPatternMethodNode >> filterBlock: anObject [
+
+	filterBlock := anObject
+]
+
 { #category : 'initialization' }
 BPatternMethodNode >> initialize [ 
 	super initialize.
@@ -101,8 +124,8 @@ BPatternMethodNode >> isPatternKeyword: aString [
 
 { #category : 'matching' }
 BPatternMethodNode >> match: aNode inContext: aDictionary [
-	aNode class = self matchingClass
-		ifFalse: [ ^ false ].
+	aNode class = self matchingClass ifFalse: [ ^ false ].
+	(self matchFilterAgainst: aNode) ifFalse: [ ^false ].
 	aDictionary at: '-source-' put: aNode source.
 	self isSelectorList ifTrue: [
 		^ (aDictionary at: self selector ifAbsentPut: [ aNode selector ]) = aNode selector
@@ -112,6 +135,13 @@ BPatternMethodNode >> match: aNode inContext: aDictionary [
 	^(self matchArgumentsAgainst: aNode inContext: aDictionary)
 		and: [ (self matchPragmas: self pragmas against: aNode pragmas inContext: aDictionary)
 		and: [ body match: aNode body inContext: aDictionary ] ]
+]
+
+{ #category : 'matching' }
+BPatternMethodNode >> matchFilterAgainst: aNode [
+	filterBlock ifNil: [ ^true ].
+	
+	^filterBlock value: aNode
 ]
 
 { #category : 'matching' }
@@ -139,4 +169,11 @@ BPatternMethodNode >> patternKeywords [
 BPatternMethodNode >> patternKeywords: anObject [
 
 	patternKeywords := anObject
+]
+
+{ #category : 'accessing' }
+BPatternMethodNode >> selector: aSelectorNode [ 
+	super selector: aSelectorNode.
+	
+	aSelectorNode value isBinary ifTrue: [ self beBinary ]
 ]

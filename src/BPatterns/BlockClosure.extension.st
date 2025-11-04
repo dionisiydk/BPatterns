@@ -4,19 +4,14 @@ Extension { #name : 'BlockClosure' }
 BlockClosure >> bmethod [
 
 	| methodAssoc pattern |
-	methodAssoc := self valueWithArguments: (Array new: self numArgs).
+	methodAssoc := self value.
 	pattern := methodAssoc value bpattern.
-	^pattern beMethod: methodAssoc key.
+	^pattern beMethod: methodAssoc key
 ]
 
 { #category : '*BPatterns' }
 BlockClosure >> bpattern [
 	^BPattern fromBlock: self
-]
-
-{ #category : '*BPatterns' }
-BlockClosure >> bpattern: varSpecs [
-	^self bpattern configureBy: varSpecs
 ]
 
 { #category : '*BPatterns' }

@@ -148,7 +148,7 @@ Here the enclosing block of #bmethod returns an association of a pattern block f
 ```Smalltalk
 		| anyFirstStatement otherStatements |
 		[[ self anyMessage ] -> [ anyFirstStatement. otherStatements. super anyMessage ]] bmethod 
-			configureBy: [otherStatements] -> [:pattern| p beList]; 
+			configureBy: [otherStatements] -> [:pattern| pattern beList]; 
 			browseUsers
 ```
 
@@ -156,13 +156,14 @@ This pattern will find all methods with a super call after a sequence of other s
 The result of #bmethod is an instance of BPattern and therefore it can be used for the code search and rewrite:
 
 ```Smalltalk
-	[:anyStmts |
-			[[ self anyMessage ] -> [ anyStmts. self anyMessage ]] bmethod 
-				->
-			[[ self anyMessage ] -> [ [ anyStmts ] repeat ]] bmethod
-	] brewrite
+	| stmts |
+	[
+		[[ self anyMessage ] -> [ stmts. self anyMessage ]] bmethod 
+			->
+		[[ self anyMessage ] -> [ [ stmts ] repeat ]] bmethod
+	] brewrite configureBy: [stmts] -> [:pattern| pattern beList]
 ```
-Here is a method pattern example which will find a simple recursion and replace it with the loop. The recursive call can be an any kind of message sends with any number of arguments.
+Here is a rewrite example which will find a simple recursion and replace it with the loop. The recursive call can be an any kind of message sends with any number of arguments.
 
 
 
@@ -231,19 +232,6 @@ BPattern >> beMethod: headerBlock [
 { #category : 'converting' }
 BPattern >> bpattern [
 	^self
-]
-
-{ #category : 'converting' }
-BPattern >> bpattern: varSpecs [
-	^self configureBy: varSpecs
-]
-
-{ #category : 'initialization' }
-BPattern >> configureBy: configSpecs [
-	
-	| patternConfigs |
-	patternConfigs := BPatternConfig readFromSpecs: configSpecs.
-	configs addAll: patternConfigs
 ]
 
 { #category : 'printing' }
@@ -366,4 +354,12 @@ BPattern >> usersInClass: aClass [
 	aClass class methodsDo: [:each | 	(self matchesMethod: each) ifTrue: [ result add: each ]].
 	^result
 
+]
+
+{ #category : 'initialization' }
+BPattern >> with: configSpecs [
+	
+	| patternConfigs |
+	patternConfigs := BPatternConfig readFromSpecs: configSpecs.
+	configs addAll: patternConfigs
 ]

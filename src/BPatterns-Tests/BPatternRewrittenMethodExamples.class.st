@@ -29,5 +29,6 @@ BPatternRewrittenMethodExamples >> recursionMethodByRenamedTemp: arg1 with: arg2
 { #category : 'examples' }
 BPatternRewrittenMethodExamples >> recursionMethodWithTemps: arg1 with: arg2 [
 	| tempA tempB |
-	[ arg1 printOn: arg2 ] repeat
+	[ arg1 printOn: arg2.
+	{arg2. arg2} printString ] repeat
 ]

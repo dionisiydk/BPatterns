@@ -9,7 +9,5 @@ Class {
 BPatternDefaultVarConfig >> isForNode: aVariableNode [
 	(super isForNode: aVariableNode) ifFalse: [ ^false ].
 	
-	aVariableNode isArgumentVariable ifTrue: [ ^true ].
-	aVariableNode isWorkspaceVariable ifTrue: [ ^true ].
 	^aVariableNode name beginsWith: 'any'
 ]

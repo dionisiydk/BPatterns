@@ -2,7 +2,8 @@ Class {
 	#name : 'BPatternMessageNode',
 	#superclass : 'OCPatternMessageNode',
 	#instVars : [
-		'patternKeywords'
+		'patternKeywords',
+		'filterBlock'
 	],
 	#category : 'BPatterns',
 	#package : 'BPatterns'
@@ -19,6 +20,11 @@ BPatternMessageNode >> addPatternKeywords: symbols [
 ]
 
 { #category : 'converting' }
+BPatternMessageNode >> beBinary [ 
+	filterBlock := [ :node | node selector isBinary ]
+]
+
+{ #category : 'converting' }
 BPatternMessageNode >> beCascadeList [ 
 	isCascadeList := true
 ]
@@ -30,6 +36,12 @@ BPatternMessageNode >> bePatternNode [
 { #category : 'initialization' }
 BPatternMessageNode >> beSelectorList [
 	isList := true
+]
+
+{ #category : 'converting' }
+BPatternMessageNode >> beUnary [ 
+	isList := false.
+	filterBlock := [ :node | node selector isUnary ]
 ]
 
 { #category : 'matching' }
@@ -49,6 +61,18 @@ BPatternMessageNode >> copyInContext: aDictionary [
 		arguments: (self copyList: args inContext: aDictionary)
 ]
 
+{ #category : 'accessing' }
+BPatternMessageNode >> filterBlock [
+
+	^ filterBlock
+]
+
+{ #category : 'accessing' }
+BPatternMessageNode >> filterBlock: anObject [
+
+	filterBlock := anObject
+]
+
 { #category : 'initialization' }
 BPatternMessageNode >> initialize [ 
 	super initialize.
@@ -63,14 +87,21 @@ BPatternMessageNode >> isPatternKeyword: aString [
 
 { #category : 'matching' }
 BPatternMessageNode >> match: aNode inContext: aDictionary [
-	aNode class == self matchingClass ifFalse: [^false].
-	(receiver match: aNode receiver inContext: aDictionary) ifFalse: [^false].
-	self isSelectorList
-		ifTrue:
-			[^(aDictionary at: self selector ifAbsentPut: [aNode selector])
-				== aNode selector and:
-						[(aDictionary at: self selector, '_args' ifAbsentPut: [ aNode arguments ]) = aNode arguments]].
+	aNode class == self matchingClass ifFalse: [ ^false ].
+	(self matchFilterAgainst: aNode) ifFalse: [ ^false ].
+	(receiver match: aNode receiver inContext: aDictionary) ifFalse: [ ^false ].
+	
+	self isSelectorList ifTrue:	[
+		^(aDictionary at: self selector ifAbsentPut: [aNode selector]) == aNode selector 
+			and: [(aDictionary at: self selector, '_args' ifAbsentPut: [ aNode arguments ]) = aNode arguments]].
 	^self matchArgumentsAgainst: aNode inContext: aDictionary
+]
+
+{ #category : 'matching' }
+BPatternMessageNode >> matchFilterAgainst: aNode [
+	filterBlock ifNil: [ ^true ].
+	
+	^filterBlock value: aNode
 ]
 
 { #category : 'matching' }
@@ -98,4 +129,11 @@ BPatternMessageNode >> patternKeywords [
 BPatternMessageNode >> patternKeywords: anObject [
 
 	patternKeywords := anObject
+]
+
+{ #category : 'accessing' }
+BPatternMessageNode >> selector: aSelectorNode [ 
+	super selector: aSelectorNode.
+	
+	aSelectorNode value isBinary ifTrue: [ self beBinary ]
 ]

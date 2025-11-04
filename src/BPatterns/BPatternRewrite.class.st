@@ -35,7 +35,7 @@ Class {
 { #category : 'instance creation' }
 BPatternRewrite class >> fromBlock: definitionBlock [
 	| ruleAssoc searchPattern rewritePattern |
-	ruleAssoc := definitionBlock valueWithArguments: (Array new: definitionBlock numArgs).
+	ruleAssoc := definitionBlock value.
 	searchPattern := ruleAssoc key bpattern.
 	rewritePattern := ruleAssoc value bpattern.
 	^self fromPattern: searchPattern to: rewritePattern
@@ -125,4 +125,10 @@ BPatternRewrite >> searchPattern [
 BPatternRewrite >> searchPattern: anObject [
 
 	searchPattern := anObject
+]
+
+{ #category : 'initialization' }
+BPatternRewrite >> with: configSpecs [ 
+	searchPattern with: configSpecs.
+	rewritePattern with: configSpecs
 ]

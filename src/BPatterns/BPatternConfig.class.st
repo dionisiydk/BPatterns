@@ -66,7 +66,13 @@ BPatternConfig class >> readFromSpecs: anObjectOrArray [
 BPatternConfig >> applyForNode: anASTNode [
 	anASTNode bePatternNode.
 	
-	nodeConfigBlock ifNotNil: [ nodeConfigBlock value: anASTNode ]
+	self applyForPatternNode: anASTNode
+]
+
+{ #category : 'applying' }
+BPatternConfig >> applyForPatternNode: aPatternNode [
+	
+	nodeConfigBlock ifNotNil: [ nodeConfigBlock value: aPatternNode ]
 ]
 
 { #category : 'testing' }

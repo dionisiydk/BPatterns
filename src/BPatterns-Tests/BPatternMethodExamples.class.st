@@ -31,5 +31,6 @@ BPatternMethodExamples >> recursionMethodByRenamedTemp: arg1 with: arg2 [
 BPatternMethodExamples >> recursionMethodWithTemps: arg1 with: arg2 [
 	| tempA tempB |
 	arg1 printOn: arg2.
+	{arg2. arg2} printString.
 	self recursionMethodWithTemps: arg1 with: arg2
 ]
