@@ -63,6 +63,11 @@ BPatternMethodNode >> beBinary [
 ]
 
 { #category : 'converting' }
+BPatternMethodNode >> beKeyword [ 
+	filterBlock := [ :node | node selector isKeyword ]
+]
+
+{ #category : 'converting' }
 BPatternMethodNode >> bePatternNode [
 	^self
 ]
@@ -102,12 +107,6 @@ BPatternMethodNode >> copyInContext: aDictionary [
 BPatternMethodNode >> filterBlock [
 
 	^ filterBlock
-]
-
-{ #category : 'accessing' }
-BPatternMethodNode >> filterBlock: anObject [
-
-	filterBlock := anObject
 ]
 
 { #category : 'initialization' }
@@ -176,4 +175,9 @@ BPatternMethodNode >> selector: aSelectorNode [
 	super selector: aSelectorNode.
 	
 	aSelectorNode value isBinary ifTrue: [ self beBinary ]
+]
+
+{ #category : 'initialization' }
+BPatternMethodNode >> where: aBlock [ 
+	filterBlock := aBlock 
 ]

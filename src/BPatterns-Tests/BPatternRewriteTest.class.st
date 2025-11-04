@@ -140,7 +140,7 @@ BPatternRewriteTest >> testRewriteForCascade [
 				-> [ self messages2; bar: 4; messages1 ]
 		]
 		with:  #(messages1 messages2) -> [ :p | p beCascadeList ]
-		compareTo: [ self bar; bar: 4; foo; printString. self foo:4 ]
+		compareTo: [ self bar; bar: 4; foo; printString. self foo: 4 ]
 ]
 
 { #category : 'tests' }
@@ -204,6 +204,16 @@ BPatternRewriteTest >> testRewriteForInstVarRenameUsingConcreteVarName [
 		rewriteBlock: [ instVar printString ]
 		by: [ 	[ instVar ] -> [ instVarNewName ] ]
 		compareTo: [ instVarNewName printString ]
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteForKeywordMessageOnly [
+	| anyNum1 anyNum2 |
+	self 
+		rewriteBlock: [ 3 + 1 raisedTo: 2 - 1]
+		by: [ [ anyNum1 anyMessage: anyNum2] -> [ anyNum2 max: anyNum1 ] ]
+		with: #anyMessage: -> [:pattern | pattern beKeyword ]
+		compareTo: [  2 - 1 max: 3 + 1 ]
 ]
 
 { #category : 'tests' }

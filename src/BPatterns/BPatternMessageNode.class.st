@@ -30,6 +30,11 @@ BPatternMessageNode >> beCascadeList [
 ]
 
 { #category : 'converting' }
+BPatternMessageNode >> beKeyword [ 
+	filterBlock := [ :node | node selector isKeyword ]
+]
+
+{ #category : 'converting' }
 BPatternMessageNode >> bePatternNode [
 ]
 
@@ -65,12 +70,6 @@ BPatternMessageNode >> copyInContext: aDictionary [
 BPatternMessageNode >> filterBlock [
 
 	^ filterBlock
-]
-
-{ #category : 'accessing' }
-BPatternMessageNode >> filterBlock: anObject [
-
-	filterBlock := anObject
 ]
 
 { #category : 'initialization' }
@@ -136,4 +135,9 @@ BPatternMessageNode >> selector: aSelectorNode [
 	super selector: aSelectorNode.
 	
 	aSelectorNode value isBinary ifTrue: [ self beBinary ]
+]
+
+{ #category : 'initialization' }
+BPatternMessageNode >> where: aBlock [ 
+	filterBlock := aBlock
 ]
