@@ -326,7 +326,7 @@ BPatternTest >> testCreationFromBlockWithVarDefinitionBlock [
 
 	| actual block allVarNodes patternVarNodes patternTemp |
 	block := [ | nonPatternVar | patternTemp isNil ifFalse: [ patternTemp printString. nonPatternVar ]].
-	actual := block bpattern with: [ patternTemp ] -> [:pattern | pattern beStatement ].
+	actual := block bpattern with: [ patternTemp ] -> [:pattern | pattern beVariable ].
 	
 	self assert: actual class equals: BPattern.
 	self assert: actual patternAST sourceCode equals: block sourceNode body sourceCode.
@@ -336,7 +336,7 @@ BPatternTest >> testCreationFromBlockWithVarDefinitionBlock [
 	patternVarNodes do: [:each | 
 		self assert: each isPatternNode.
 		self deny: each isAnything.
-		self assert: each isStatement.
+		self deny: each isStatement.
 	].	 
 	(allVarNodes copyWithoutAll: patternVarNodes) do: [ :each |
 			self deny: each isPatternNode 

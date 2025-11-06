@@ -54,17 +54,17 @@ BPatternMethodNode >> adoptTemps [
 	"By default if the pattern does not explicitly define temps it will match any number of temps"
 	anyTemps := body addTemporaryNamed: 'anyTemps'.
 	anyTemps bePatternNode.
-	anyTemps beList.
+	anyTemps beMultiStatements. "Under the temps declaration multiple statements  means any number of temps"
 ]
 
-{ #category : 'converting' }
+{ #category : 'initialization' }
 BPatternMethodNode >> beBinary [ 
-	filterBlock := [ :node | node selector isBinary ]
+	self where: [:node | node selector isBinary ]
 ]
 
-{ #category : 'converting' }
+{ #category : 'initialization' }
 BPatternMethodNode >> beKeyword [ 
-	filterBlock := [ :node | node selector isKeyword ]
+	self where: [:node | node selector isKeyword ]
 ]
 
 { #category : 'converting' }
@@ -77,10 +77,10 @@ BPatternMethodNode >> beSelectorList [
 	isList := true
 ]
 
-{ #category : 'converting' }
+{ #category : 'initialization' }
 BPatternMethodNode >> beUnary [ 
 	isList := false.
-	filterBlock := [ :node | node selector isUnary ]
+	self where: [:node | node selector isUnary ]
 ]
 
 { #category : 'matching' }

@@ -159,8 +159,7 @@ BPatternRewriteTest >> testRewriteForDuplicatesReplace [
 		rewriteBlock: [ self first; second. self first; second. self a. self b ]
 		by: [ [ any. any. any2  ] -> [ 2 timesRepeat: [ any ]. any2 ] ]
 		with: {
-			[ any ] -> [:var | var beStatement ].
-			[ any2 ] -> [:var | var beStatement; beList ]
+			[ any2 ] -> [:var | var beMultiStatements ]
 		}
 		compareTo: [ 2 timesRepeat: [ self first; second ]. self a. self b ]
 ]
@@ -251,11 +250,10 @@ BPatternRewriteTest >> testRewriteForKeywordSwapWithPattern [
 
 { #category : 'tests' }
 BPatternRewriteTest >> testRewriteForMessageReceiverAndArgSwap [
-	| rcvr arg |
+	| anyRcv anyArg |
 	self 
 		rewriteBlock: [ 1 + 2 + 3. 3 foo: 4 ]
-		by: [ [ rcvr message: arg ] -> [ arg message: rcvr ] ]
-		with: {#message: . [ rcvr. arg. ] -> [:p | p beList; beRecursive] }
+		by: [ [ anyRcv anyMessage: anyArg ] -> [ anyArg anyMessage: anyRcv ] ]
 		compareTo: [ 3 + (2 + 1). 4 foo: 3 ]
 ]
 
@@ -319,7 +317,7 @@ BPatternRewriteTest >> testRewriteForMethodsWithTempsWithoutTempsInPattern [
 				->
 			[[ self anyMessage ] -> [ [ anyStmts ] repeat ]] bmethod
 		]
-		with: [ anyStmts ] -> [:pattern | pattern beList ]
+		with: [ anyStmts ] -> [:pattern | pattern beMultiStatements ]
 ]
 
 { #category : 'tests' }

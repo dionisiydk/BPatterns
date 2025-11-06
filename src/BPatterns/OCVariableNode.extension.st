@@ -3,10 +3,9 @@ Extension { #name : 'OCVariableNode' }
 { #category : '*BPatterns' }
 OCVariableNode >> bePatternNode [
 	| patternNode |
-	patternNode := OCPatternVariableNode named: name start: start.
+	patternNode := BPatternVariableNode named: name start: start.
 	patternNode 
 		parent: parent; 
-		variable: variable;
-		prepareForBPattern.
+		variable: variable.
 	patternNode become: self
 ]

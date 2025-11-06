@@ -19,19 +19,19 @@ BPatternMessageNode >> addPatternKeywords: symbols [
 	patternKeywords addAll: symbols
 ]
 
-{ #category : 'converting' }
+{ #category : 'initialization' }
 BPatternMessageNode >> beBinary [ 
-	filterBlock := [ :node | node selector isBinary ]
+	self where: [ :node | node selector isBinary ]
 ]
 
-{ #category : 'converting' }
+{ #category : 'initialization' }
 BPatternMessageNode >> beCascadeList [ 
 	isCascadeList := true
 ]
 
-{ #category : 'converting' }
+{ #category : 'initialization' }
 BPatternMessageNode >> beKeyword [ 
-	filterBlock := [ :node | node selector isKeyword ]
+	self where: [ :node | node selector isKeyword ]
 ]
 
 { #category : 'converting' }
@@ -43,10 +43,10 @@ BPatternMessageNode >> beSelectorList [
 	isList := true
 ]
 
-{ #category : 'converting' }
+{ #category : 'initialization' }
 BPatternMessageNode >> beUnary [ 
 	isList := false.
-	filterBlock := [ :node | node selector isUnary ]
+	self where: [ :node | node selector isUnary ]
 ]
 
 { #category : 'matching' }
