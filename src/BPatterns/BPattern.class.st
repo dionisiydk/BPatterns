@@ -3,20 +3,23 @@ I represent an AST pattern which can be matched against AST nodes.
 My instances are created from a pattern block using #bpattern message:
 
 ```Smalltalk
-	[:any :any2 | any isNil ifTrue: any2 ] bpattern
+	| any |
+	[ any isNil ifTrue: any2 ] bpattern
 ```
 
 Once you have a BPattern you can browse the system to find all matching methods:
 
 ```Smalltalk
-	[:any :any2 | any isNil ifTrue: any2 ] bpattern browseUsers.
-	[:any | any printString asString ] bpattern browseUsersInClass: BPatternMethodQueryTest.
+	| any any2 |
+	[ any isNil ifTrue: any2 ] bpattern browseUsers.
+	[ any printString asString ] bpattern browseUsersInClass: BPatternMethodQueryTest.
 ```
 
 Using two BPatterns you can rewrite the matching methods:
 
 ```Smalltalk
-	[:any | 
+	| any |
+	[ 
 		[ any printString asString ] -> [ any printString ] 
 	] brewrite previewForClass: BPatternMethodQueryTest
 ```
@@ -80,7 +83,8 @@ This example will match a message send with any receiver and variables as argume
 Thus selectors can be also used as patterns:
 
 ```Smalltalk
-	[:any :anyAg1 :anyArg2 | any at: anyArg1 anyOtherKeyword: anyArg2 ] bpattern
+	| any anyAg1 anyArg2 |
+	[ any at: anyArg1 anyOtherKeyword: anyArg2 ] bpattern
 ```
 
 It will match any message sends with a selector started with #at: and any other second keyword. It does not require any configuration because #anyOtherKeyword: is started with any word.  

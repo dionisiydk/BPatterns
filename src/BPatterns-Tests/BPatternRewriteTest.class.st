@@ -144,7 +144,7 @@ BPatternRewriteTest >> testRewriteForCascade [
 ]
 
 { #category : 'tests' }
-BPatternRewriteTest >> testRewriteForConstantChange [
+BPatternRewriteTest >> testRewriteForConstantReplace [
 
 	self 
 		rewriteBlock: [ 3 + 4 ]
@@ -158,9 +158,7 @@ BPatternRewriteTest >> testRewriteForDuplicatesReplace [
 	self 
 		rewriteBlock: [ self first; second. self first; second. self a. self b ]
 		by: [ [ any. any. any2  ] -> [ 2 timesRepeat: [ any ]. any2 ] ]
-		with: {
-			[ any2 ] -> [:var | var beMultiStatements ]
-		}
+		with: [ any2 ] -> [:var | var beMultiStatements ]
 		compareTo: [ 2 timesRepeat: [ self first; second ]. self a. self b ]
 ]
 
@@ -186,6 +184,20 @@ BPatternRewriteTest >> testRewriteForFullASTReplaceUsingPatternVar [
 ]
 
 { #category : 'tests' }
+BPatternRewriteTest >> testRewriteForGlobalVarUsingFilter [
+	| anotherTemp any |
+	self 
+		rewriteBlock: [ Smalltalk printString. Array asString. Set asArray. ByteArray . WeakArray ]
+		by: [ [ any ] -> [ Array ] ] 
+		with: [ any ] -> [:pattern | 
+			pattern 
+				beGlobalVarWithAny: SequenceableCollection allSubclasses; 
+				where: [:class | class name endsWith: 'Array' ]
+		]
+		compareTo: [ Smalltalk printString. Array asString. Set asArray. Array . Array ]
+]
+
+{ #category : 'tests' }
 BPatternRewriteTest >> testRewriteForIfNilRule [
 	| any |
 	self 
@@ -203,6 +215,16 @@ BPatternRewriteTest >> testRewriteForInstVarRenameUsingConcreteVarName [
 		rewriteBlock: [ instVar printString ]
 		by: [ 	[ instVar ] -> [ instVarNewName ] ]
 		compareTo: [ instVarNewName printString ]
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteForInstVarUsingFilter [
+	| tempNewName anotherTemp any |
+	self 
+		rewriteBlock: [ instVarNewName printString. instVar asString. tempNewName asArray ]
+		by: [ [ any ] -> [ anotherTemp ] ] 
+		with: [ any ] -> [:pattern | pattern beInstVar where: [:var | var name endsWith: 'NewName' ]]
+		compareTo: [ anotherTemp printString. instVar asString. tempNewName asArray ]
 ]
 
 { #category : 'tests' }
@@ -246,6 +268,17 @@ BPatternRewriteTest >> testRewriteForKeywordSwapWithPattern [
 			[ ^anyRcv any: anyArg1 put: anyArg2 ] -> [ ^anyRcv put: anyArg1 any: anyArg2 ]
 		] 
 		compareTo: [ ^self put: 1 foo: 2 ] 
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteForLiteralUsingFilter [
+	| any |
+	self 
+		rewriteBlock: [ {'string1'. 'string2'. 'string11'. 1. 2} ]
+		by: [ [ any ] -> [ 'replaced' ] ]
+		with: [ any ] -> [:pattern | 
+			pattern beLiteral where: [:value | value isString and: [ value endsWith: '1' ]]]
+		compareTo: [ {'replaced'. 'string2'. 'replaced'. 1. 2} ]
 ]
 
 { #category : 'tests' }
@@ -348,6 +381,16 @@ BPatternRewriteTest >> testRewriteForTempRenameInMessageReceiver [
 		rewriteBlock: [ a printString  ]
 		by: [ 	[ a ] -> [ b ] ]
 		compareTo: [ b printString ]
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteForTempVarUsingFilter [
+	| instVarAsTemp anotherTemp any |
+	self 
+		rewriteBlock: [ instVarNewName printString. anotherTemp asString. instVarAsTemp asArray ]
+		by: [ [ any ] -> [ instVar ] ] 
+		with: [ any ] -> [:pattern | pattern beTempVar where: [:var | var name beginsWith: 'instVar' ]]
+		compareTo: [ instVarNewName printString. anotherTemp asString. instVar asArray ]
 ]
 
 { #category : 'tests on methods' }

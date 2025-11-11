@@ -2,7 +2,7 @@ Class {
 	#name : 'BPatternVariableNode',
 	#superclass : 'OCPatternVariableNode',
 	#instVars : [
-		'filterBlock'
+		'filters'
 	],
 	#category : 'BPatterns',
 	#package : 'BPatterns'
@@ -11,25 +11,32 @@ Class {
 { #category : 'initialization' }
 BPatternVariableNode >> beArg [
 
-	self where: [:var | var isArgumentVariable ]
+	self beVariable: [:var | var isArgumentVariable ]
 ]
 
 { #category : 'initialization' }
 BPatternVariableNode >> beClassVar [
 
-	self where: [:var | var isClassVariable ]
+	self beVariable: [:var | var isClassVariable ]
 ]
 
 { #category : 'initialization' }
 BPatternVariableNode >> beGlobalVar [
 
-	self where: [:var | var isGlobalVariable ]
+	self beVariable: [:var | var isGlobalVariable ]
+]
+
+{ #category : 'initialization' }
+BPatternVariableNode >> beGlobalVarWithAny: valueOptions [
+
+	self beGlobalVar.
+	self where: [:var | valueOptions includes: var value ]
 ]
 
 { #category : 'initialization' }
 BPatternVariableNode >> beInstVar [
 
-	self where: [:var | var isInstanceVariable ]
+	self beVariable: [:var | var isInstanceVariable ]
 ]
 
 { #category : 'initialization' }
@@ -42,7 +49,7 @@ BPatternVariableNode >> beLiteral [
 { #category : 'initialization' }
 BPatternVariableNode >> beLocalVar [
 
-	self where: [:var | var isLocalVariable ]
+	self beVariable: [:var | var isLocalVariable ]
 ]
 
 { #category : 'initialization' }
@@ -58,7 +65,7 @@ BPatternVariableNode >> bePatternNode [
 { #category : 'initialization' }
 BPatternVariableNode >> bePoolVar [
 
-	self where: [:var | var isPoolVariable ]
+	self beVariable: [:var | var isPoolVariable ]
 ]
 
 { #category : 'initialization' }
@@ -69,7 +76,7 @@ BPatternVariableNode >> beRecursive [
 { #category : 'initialization' }
 BPatternVariableNode >> beShadowingVar [
 
-	self where: [:var | var isShadowing ]
+	self beVariable: [:var | var isShadowing ]
 ]
 
 { #category : 'initialization' }
@@ -80,15 +87,15 @@ BPatternVariableNode >> beStatement [
 ]
 
 { #category : 'initialization' }
-BPatternVariableNode >> beTemp [
+BPatternVariableNode >> beTempVar [
 
-	self where: [:var | var isTempVariable ]
+	self beVariable: [:var | var isTempVariable ]
 ]
 
 { #category : 'initialization' }
 BPatternVariableNode >> beUndeclared [
 
-	self where: [:var | var isUndeclaredVariable ]
+	self beVariable: [:var | var isUndeclaredVariable ]
 ]
 
 { #category : 'initialization' }
@@ -98,14 +105,22 @@ BPatternVariableNode >> beVariable [
 	isStatement := false.
 ]
 
-{ #category : 'accessing' }
-BPatternVariableNode >> filterBlock [
+{ #category : 'initialization' }
+BPatternVariableNode >> beVariable: aBlock [
 
-	^ filterBlock
+	self beVariable.
+	self where: aBlock
+]
+
+{ #category : 'accessing' }
+BPatternVariableNode >> filters [
+
+	^ filters
 ]
 
 { #category : 'initialization' }
 BPatternVariableNode >> initializePatternVariables [
+	filters := #().
 	isList := isLiteral := isStatement := recurseInto := false.
 	isAnything := true.
 	self beRecursive
@@ -122,11 +137,17 @@ BPatternVariableNode >> match: aNode inContext: aDictionary [
 ]
 
 { #category : 'matching' }
+BPatternVariableNode >> matchFiltersFor: anObject [
+
+	^filters allSatisfy: [ :each | each value: anObject ]
+
+]
+
+{ #category : 'matching' }
 BPatternVariableNode >> matchLiteral: aNode inContext: aDictionary [
 
 	aNode isLiteralNode ifFalse: [ ^false ].
-	filterBlock ifNotNil: [
-		 (filterBlock value: aNode value) ifFalse: [ ^false ]].
+	(self matchFiltersFor: aNode value) ifFalse: [ ^false ].
 	
 	^self compare: (aDictionary at: self ifAbsentPut: [aNode]) with: aNode
 ]
@@ -135,8 +156,7 @@ BPatternVariableNode >> matchLiteral: aNode inContext: aDictionary [
 BPatternVariableNode >> matchVariable: aNode inContext: aDictionary [
 
 	aNode isVariable ifFalse: [^false].
-	filterBlock ifNotNil: [
-		 (filterBlock value: aNode variable) ifFalse: [ ^false ]].
+	(self matchFiltersFor: aNode variable) ifFalse: [ ^false ].
 
 	^self compare: (aDictionary at: self ifAbsentPut: [aNode]) with: aNode
 ]
@@ -148,8 +168,7 @@ BPatternVariableNode >> prepareForBPattern [
 	self beRecursive
 ]
 
-{ #category : 'accessing' }
+{ #category : 'initialization' }
 BPatternVariableNode >> where: aBlock [
-
-	filterBlock := aBlock
+	filters := filters copyWith: aBlock.
 ]
