@@ -25,6 +25,9 @@ Using two BPatterns you can rewrite the matching methods:
 ```
 See `BPatternRewrite` class for more details about the rewrite.
 
+##Patterns configuration
+
+
 The variables and selectors inside the pattern block can be used as a pattern to match particular AST nodes.
 By default the following objects are automatically configured as **ANY** pattern to match any AST node:
 - variables started with **any** word
@@ -62,7 +65,7 @@ By using such a configuration for non default objects they will be converted to 
 
 Notice without the config block the **#someVar** object would only match variables named **#someVar**.
 
-The config block is optional and to enforce the pattern object you can just reference it:
+The config block is optional and to enforce the pattern without extra settings you can just reference it:
 
 ```
 	| someVar anyBlock |
@@ -79,7 +82,21 @@ For the arguments of **#with:** message you can pass a block for variables, an a
 		with: {[arg1. arg2] -> [:pattern | pattern beVariable]. #otherKeyword}
 ```
 
-This example will match a message send with any receiver and variables as arguments and where a selector starts with **#at:** and an arbitrary second keyword.
+This example will match a message send with any receiver and variables as arguments and where a selector starts with **#at:** and an arbitrary second keyword (see **Selector Patterns**).
+
+###Variable patterns
+
+Patterns can be configured to match a particular type of variables:
+
+```
+	| anyVar anyBlock |
+	[ anyVar ifTrue: anyBlock ] bpattern 
+		with: [ anyVar ] -> [:pattern | pattern beInstVar ];
+		with: [ anyBlock ] -> [:pattern | pattern beTempVar ];
+		browseUsers
+```
+
+###Selector patterns
 
 Thus selectors can be also used as patterns:
 
@@ -90,7 +107,22 @@ Thus selectors can be also used as patterns:
 
 It will match any message sends with a selector started with #at: and any other second keyword. It does not require any configuration because **#anyOtherKeyword:** is started with any word.  
 
-For binary selectors you have to use the config block:
+The **keyword selector** pattern matches any type of selectors with same number of arguments.
+For example the following pattern will match any binary messages like 1 + 2 together with any one argument keywords:
+
+```
+	| any any2 |
+	[ any anyMessage: any2 ] bpattern
+```
+
+To narrow the filter for the keyword selector type use **#beKeyword** config:
+
+```
+	| any any2 |
+	[ any anyMessage: any2 ] bpattern with: #anyMessage: -> [:pattern | pattern beKeyword ].
+```
+
+To narrow filter for the binary selector type use **#beBinary** config:
 
 ```
 	| any any2 |
@@ -104,7 +136,7 @@ Or you can configure any binary selector as a pattern:
 	[ any + any2 ] bpattern with: #+.
 ```
 
-Both examples will match any expression with any binary message lile #+, #-, #=, etc..
+Both examples will match any binary message send lile #+, #-, #=, etc..
 
 To play a bit try to browse all messages where receiver and arguments are literals:
 
@@ -115,7 +147,9 @@ To play a bit try to browse all messages where receiver and arguments are litera
 		browseUsers
 ```
 
-The unary patterns are special. If an unary selector begins with **any** word it will match any type of messages (unary, binary and keyword) with any arguments. No need to reference arguments explicitly:
+###Unary selector patterns
+
+The unary patterns are special. If an unary selector begins with **any** word it will match any type of messages (unary, binary and keyword) with any number of arguments. No need to reference arguments explicitly:
 
 ```
 	[ instVar anyMessage printString ] bpattern
@@ -135,7 +169,7 @@ Unary patterns are usefull to describe an arbitrary message sends. For example y
 	[ super anySuperCall anyMessage ] bpattern browseUsers
 ```
 
-If you need a pattern to match the **unary** type of messages you have to explicitly configure it:
+If you need a pattern to match **the unary** type of messages you have to explicitly configure it:
 
 ```
 	[ super anySuperCall anyMessage ] bpattern 
@@ -143,23 +177,27 @@ If you need a pattern to match the **unary** type of messages you have to explic
 		browseUsers
 ```
 
-Patterns defined by #bpattern message does not allow to describe methods using its header. To represent a method with a full signature there are **#bmethod** expressions:
+##BMethod
+
+Patterns defined by **#bpattern** message does not allow to use method header. To represent a method with a full signature there are **#bmethod** expressions:
 
 ```
 	| anyArg1 anyArg2 |
 	[[ self anyMethodName: anyArg1 anyExtraKeyword: anyArg2 ] -> [ anyArg1 isNil ifTrue: anyArg2 ]] bmethod
 ```
 
-Here the enclosing block of **#bmethod** returns an association of a pattern block for a method header and a pattern block for a method body. By convention the method header should contain single message send with any receiver. This message node is extracted as a pattern to describe the method header. The selector and arguments from such a header message can be used inside a body pattern:
+Here the enclosing block of **#bmethod** returns an association of a pattern block for a method header and a pattern block for a method body. By convention the method header should contain single message send with any receiver. AST node for this message send is extracted as a pattern to describe the method header. The selector and arguments from the header message can be used inside the body pattern:
+
 
 ```
 		| anyFirstStatement otherStatements |
 		[[ self anyMessage ] -> [ anyFirstStatement. otherStatements. super anyMessage ]] bmethod 
-			with: [otherStatements] -> [:pattern| pattern beList]; 
+			with: [ otherStatements ] -> [:pattern| pattern beMultiStatements ]; 
 			browseUsers
 ```
 
 This pattern will find all methods with a super call after a sequence of other statements.
+
 The result of **#bmethod** is an instance of `BPattern` and therefore it can be used for the code search and for the rewrite:
 
 ```
@@ -168,7 +206,7 @@ The result of **#bmethod** is an instance of `BPattern` and therefore it can be 
 		[[ self anyMessage ] -> [ stmts. self anyMessage ]] bmethod 
 			->
 		[[ self anyMessage ] -> [ [ stmts ] repeat ]] bmethod
-	] brewrite with: [stmts] -> [:pattern| pattern beList]
+	] brewrite with: [stmts] -> [:pattern| pattern beMultiStatements ]
 ```
 Here is a rewrite example which will find a simple recursion and replace it with a loop. The recursive call can be any kind of message send with any number of arguments.
 
@@ -288,6 +326,14 @@ BPattern >> patternAST: anASTNode [
 	patternAST := anASTNode copy
 ]
 
+{ #category : 'copying' }
+BPattern >> postCopy [ 
+	super postCopy.
+	
+	patternAST := patternAST copy.
+	configs := configs copy.
+]
+
 { #category : 'printing' }
 BPattern >> printOn: aStream [
 	super printOn: aStream.
@@ -368,5 +414,6 @@ BPattern >> with: configSpecs [
 	
 	| patternConfigs |
 	patternConfigs := BPatternConfig readFromSpecs: configSpecs.
-	configs addAll: patternConfigs
+	configs addAll: patternConfigs.
+	isConfigured := false
 ]

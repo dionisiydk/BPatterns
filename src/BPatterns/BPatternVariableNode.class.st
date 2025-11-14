@@ -8,6 +8,17 @@ Class {
 	#package : 'BPatterns'
 }
 
+{ #category : 'comparing' }
+BPatternVariableNode >> = anObject [
+	super = anObject ifFalse: [ ^false ].
+	
+	filters size = anObject filters size ifFalse: [ ^false ].
+	filters with: anObject filters do: [:my :their |
+		my compiledBlock = their compiledBlock ifFalse: [ ^false ]
+	].
+	^true
+]
+
 { #category : 'initialization' }
 BPatternVariableNode >> beArg [
 
@@ -116,6 +127,12 @@ BPatternVariableNode >> beVariable: aBlock [
 BPatternVariableNode >> filters [
 
 	^ filters
+]
+
+{ #category : 'comparing' }
+BPatternVariableNode >> hash [
+	^filters inject: super hash into: [:result :each | 
+		each compiledBlock hash bitXor: result hash ]
 ]
 
 { #category : 'initialization' }

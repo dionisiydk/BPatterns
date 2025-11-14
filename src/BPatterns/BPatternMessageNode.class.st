@@ -3,11 +3,22 @@ Class {
 	#superclass : 'OCPatternMessageNode',
 	#instVars : [
 		'patternKeywords',
-		'filterBlock'
+		'filters'
 	],
 	#category : 'BPatterns',
 	#package : 'BPatterns'
 }
+
+{ #category : 'comparing' }
+BPatternMessageNode >> = anObject [
+	super = anObject ifFalse: [ ^false ].
+	
+	filters size = anObject filters size ifFalse: [^false ].
+	filters with: anObject filters do: [:my :their |
+		my compiledBlock = their compiledBlock ifFalse: [^false ]
+	].
+	^true
+]
 
 { #category : 'accessing' }
 BPatternMessageNode >> addPatternKeyword: aSymbol [
@@ -67,15 +78,22 @@ BPatternMessageNode >> copyInContext: aDictionary [
 ]
 
 { #category : 'accessing' }
-BPatternMessageNode >> filterBlock [
+BPatternMessageNode >> filters [
 
-	^ filterBlock
+	^ filters
+]
+
+{ #category : 'comparing' }
+BPatternMessageNode >> hash [
+	^filters inject: super hash into: [:result :each | 
+		each compiledBlock hash bitXor: result hash ]
 ]
 
 { #category : 'initialization' }
 BPatternMessageNode >> initialize [ 
 	super initialize.
-	
+
+	filters := #().
 	patternKeywords := Set new
 ]
 
@@ -87,7 +105,7 @@ BPatternMessageNode >> isPatternKeyword: aString [
 { #category : 'matching' }
 BPatternMessageNode >> match: aNode inContext: aDictionary [
 	aNode class == self matchingClass ifFalse: [ ^false ].
-	(self matchFilterAgainst: aNode) ifFalse: [ ^false ].
+	(self matchFiltersFor: aNode) ifFalse: [ ^false ].
 	(receiver match: aNode receiver inContext: aDictionary) ifFalse: [ ^false ].
 	
 	self isSelectorList ifTrue:	[
@@ -97,10 +115,10 @@ BPatternMessageNode >> match: aNode inContext: aDictionary [
 ]
 
 { #category : 'matching' }
-BPatternMessageNode >> matchFilterAgainst: aNode [
-	filterBlock ifNil: [ ^true ].
-	
-	^filterBlock value: aNode
+BPatternMessageNode >> matchFiltersFor: anObject [
+
+	^filters allSatisfy: [ :each | each value: anObject ]
+
 ]
 
 { #category : 'matching' }
@@ -138,6 +156,6 @@ BPatternMessageNode >> selector: aSelectorNode [
 ]
 
 { #category : 'initialization' }
-BPatternMessageNode >> where: aBlock [ 
-	filterBlock := aBlock
+BPatternMessageNode >> where: aBlock [
+	filters := filters copyWith: aBlock.
 ]

@@ -19,6 +19,72 @@ BPatternTest >> testComparison [
 ]
 
 { #category : 'tests' }
+BPatternTest >> testComparisonWithFilters [
+	
+	| bpattern anyRcv anyArg bpattern2 |
+	bpattern := [ anyRcv anyMessage: anyArg ] bpattern 
+		with: [ anyRcv ] -> [ :pattern | pattern beInstVar where: [:var | var name beginsWith: 'prim' ]];
+		with: [ anyArg ] -> [ :pattern | pattern beInstVar where: [:var | var name beginsWith: 'a' ]];
+		with: #anyMessage: -> [:pattern | pattern beKeyword ].
+	self assert: bpattern = bpattern.
+	self assert: bpattern copy = bpattern.
+	self assert: bpattern copy hash equals: bpattern hash.
+	
+	bpattern2 := [ anyRcv anyMessage: anyArg ] bpattern 
+		with: [ anyRcv ] -> [ :pattern | pattern beInstVar where: [:var | var name beginsWith: 'prim' ]];
+		with: [ anyArg ] -> [ :pattern | pattern beInstVar where: [:var | var name beginsWith: 'a' ]];
+		with: #anyMessage: -> [:pattern | pattern beKeyword ].
+	self assert: bpattern = bpattern2.
+	self assert: bpattern hash = bpattern2 hash.
+	
+	bpattern2 := [ anyRcv anyMessage: anyArg ] bpattern 
+		with: [ anyRcv ] -> [ :pattern | pattern beInstVar where: [:var | var name beginsWith: 'prim' ]];
+		with: [ anyArg ] -> [ :pattern | pattern beInstVar where: [:var | var name beginsWith: 'a' ]].
+	self deny: bpattern = bpattern2.
+	
+	bpattern2 := [ anyRcv anyMessage: anyArg ] bpattern 
+		with: [ anyRcv ] -> [ :pattern | pattern beInstVar where: [:var | var name beginsWith: 'prim' ]];
+		with: #anyMessage: -> [:pattern | pattern beKeyword ].
+	self deny: bpattern = bpattern2.
+	
+	bpattern2 := [ anyRcv anyMessage: anyArg ] bpattern 
+		with: [ anyRcv ] -> [ :pattern | pattern beInstVar where: [:var | var name beginsWith: 'prim' ]];
+		with: [ anyArg ] -> [ :pattern | pattern beInstVar where: [:var | var name beginsWith: 'abc' ]];
+		with: #anyMessage: -> [:pattern | pattern beKeyword ].
+	self deny: bpattern = bpattern2.
+	
+	bpattern2 := [ anyRcv anyMessage: anyArg ] bpattern 
+		with: [ anyRcv ] -> [ :pattern | pattern beInstVar where: [:var | var name beginsWith: 'prim' ]];
+		with: [ anyArg ] -> [ :pattern | pattern beInstVar where: [:var | var name beginsWith: 'a' ]];
+		with: #anyMessage: -> [:pattern | pattern beKeyword ];
+		with: #anyMessage: -> [:pattern | pattern where: [ :node | node selector beginsWith: 'some' ]].
+	self deny: bpattern = bpattern2
+]
+
+{ #category : 'tests' }
+BPatternTest >> testConfigurationMultipleTimesAfterApply [
+	
+	| bpattern rcv arg  pattern |
+	bpattern := [ rcv anyMessage: arg ] bpattern with: [ rcv ].
+	pattern := bpattern patternAST variableNodes detect: [:node| node name = 'arg' ].
+	self deny: pattern isPatternNode.
+	
+	bpattern with: [ arg ].
+	pattern := bpattern patternAST variableNodes detect: [:node| node name = 'arg' ].
+	self assert: pattern isPatternNode.
+]
+
+{ #category : 'tests' }
+BPatternTest >> testCopy [
+	
+	| bpattern anyRcv anyArg copy |
+	bpattern := [ anyRcv anyMessage: anyArg ] bpattern.
+	copy := bpattern copy.
+	self deny: bpattern patternAST identicalTo: copy patternAST.
+	self assert: bpattern patternAST = copy patternAST.
+]
+
+{ #category : 'tests' }
 BPatternTest >> testCreationFromBMethodWithAnyKeywordPattern [
 	| actual block allVarNodes patternVarNodes anyArg anyArg2 |
 	block := [[ self anyMessage: anyArg nonPatternPart: anyArg2 ] -> [ ^anyArg printString ]].

@@ -3,7 +3,7 @@ Class {
 	#superclass : 'OCPatternMethodNode',
 	#instVars : [
 		'patternKeywords',
-		'filterBlock'
+		'filters'
 	],
 	#category : 'BPatterns',
 	#package : 'BPatterns'
@@ -35,6 +35,17 @@ BPatternMethodNode class >> selector: aSymbol keywordsPositions: positionList ar
 		keywordsPositions: positionList
 		arguments: valueNodes;
 		yourself
+]
+
+{ #category : 'comparing' }
+BPatternMethodNode >> = anObject [
+	super = anObject ifFalse: [ ^false ].
+	
+	filters size = anObject filters size ifFalse: [ ^false ].
+	filters with: anObject filters do: [:my :their |
+		my compiledBlock = their compiledBlock ifFalse: [ ^false ]
+	].
+	^true
 ]
 
 { #category : 'accessing' }
@@ -104,15 +115,22 @@ BPatternMethodNode >> copyInContext: aDictionary [
 ]
 
 { #category : 'accessing' }
-BPatternMethodNode >> filterBlock [
+BPatternMethodNode >> filters [
 
-	^ filterBlock
+	^ filters
+]
+
+{ #category : 'comparing' }
+BPatternMethodNode >> hash [
+	^filters inject: super hash into: [:result :each | 
+		each compiledBlock hash bitXor: result hash ]
 ]
 
 { #category : 'initialization' }
 BPatternMethodNode >> initialize [ 
 	super initialize.
 
+	filters := #().
 	patternKeywords := Set new
 ]
 
@@ -124,7 +142,7 @@ BPatternMethodNode >> isPatternKeyword: aString [
 { #category : 'matching' }
 BPatternMethodNode >> match: aNode inContext: aDictionary [
 	aNode class = self matchingClass ifFalse: [ ^ false ].
-	(self matchFilterAgainst: aNode) ifFalse: [ ^false ].
+	(self matchFiltersFor: aNode) ifFalse: [ ^false ].
 	aDictionary at: '-source-' put: aNode source.
 	self isSelectorList ifTrue: [
 		^ (aDictionary at: self selector ifAbsentPut: [ aNode selector ]) = aNode selector
@@ -137,10 +155,9 @@ BPatternMethodNode >> match: aNode inContext: aDictionary [
 ]
 
 { #category : 'matching' }
-BPatternMethodNode >> matchFilterAgainst: aNode [
-	filterBlock ifNil: [ ^true ].
-	
-	^filterBlock value: aNode
+BPatternMethodNode >> matchFiltersFor: anObject [
+
+	^filters allSatisfy: [ :each | each value: anObject ]
 ]
 
 { #category : 'matching' }
@@ -178,6 +195,6 @@ BPatternMethodNode >> selector: aSelectorNode [
 ]
 
 { #category : 'initialization' }
-BPatternMethodNode >> where: aBlock [ 
-	filterBlock := aBlock 
+BPatternMethodNode >> where: aBlock [
+	filters := filters copyWith: aBlock.
 ]

@@ -62,6 +62,14 @@ BPatternMethodQuery >> pattern: anObject [
 	pattern := anObject
 ]
 
+{ #category : 'execution' }
+BPatternMethodQuery >> prepareStateBeforeExecution [
+	super prepareStateBeforeExecution.
+	
+	pattern patternAST. "to ensure configs takes the effect"
+	self beReadOnlyObject
+]
+
 { #category : 'comparing' }
 BPatternMethodQuery >> printExtraInfoOn: aStream [
 	super printExtraInfoOn: aStream.
