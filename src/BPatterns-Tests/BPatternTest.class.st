@@ -230,6 +230,33 @@ BPatternTest >> testCreationFromBMethodWithMultipleStatements [
 ]
 
 { #category : 'tests' }
+BPatternTest >> testCreationFromBMethodWithPragmas [
+	| actual anyPragmaArg anyPragmaArg2 anyBody pragmaNode1 pragmaNode2 anyPragmaArg3 |
+	actual := [
+		[ self anyMethod. 
+		Pragma anyPragma: anyPragmaArg extraKeyword: anyPragmaArg2.
+		Pragma somePragma2: anyPragmaArg3 ] -> [ anyBody ]] bmethod.
+
+	self assert: actual class equals: BPattern.
+	self assert: actual patternAST class equals: BPatternMethodNode.
+	self assert: actual patternAST selector equals: #anyMethod.
+	self assert: actual patternAST pragmas size equals: 2.
+	pragmaNode1 := actual patternAST pragmas first.
+	self assert: pragmaNode1 class equals: BPatternPragmaNode.
+	self assert: pragmaNode1 selector equals: #anyPragma:extraKeyword:.
+	self assert: pragmaNode1 patternKeywords asArray equals: #(anyPragma:).
+	pragmaNode1 variableNodes do: [:each | 
+		self assert: each  isPatternNode 
+	].
+	pragmaNode2 := actual patternAST pragmas second.
+	self assert: pragmaNode2 class equals: OCPragmaNode.
+	self assert: pragmaNode2 selector equals: #somePragma2:.
+	pragmaNode2 variableNodes do: [:each | 
+		self assert: each  isPatternNode 
+	]
+]
+
+{ #category : 'tests' }
 BPatternTest >> testCreationFromBMethodWithoutSelectorPatterns [
 	| actual block allVarNodes patternVarNodes anyArg |
 	actual := [ [ self someMessage: anyArg ] -> [ ^anyArg printString ]] bmethod. 

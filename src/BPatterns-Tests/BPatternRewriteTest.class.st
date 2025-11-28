@@ -282,6 +282,37 @@ BPatternRewriteTest >> testRewriteForLiteralUsingFilter [
 ]
 
 { #category : 'tests' }
+BPatternRewriteTest >> testRewriteForManyStatements [
+	| any |
+	self 
+		rewriteBlock: [ instVar printString . any someMessage. instVarNewName printString]
+		by: [[ any someMessage ] -> [ instVarNewName someMessage ]]
+		compareTo: [ instVar printString . instVarNewName someMessage. instVarNewName printString ]
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteForManyStatements2 [
+	| someTemp arg |
+	self 
+		rewriteBlock: [ instVar printString . someTemp someMessage: arg part2: 10. instVarNewName printString]
+		by: [[ someTemp anyMessage: arg part2: 10 ] -> [ someTemp part2: 10 anyMessage: arg ]]
+		compareTo: [ instVar printString . someTemp part2: 10 someMessage: arg. instVarNewName printString ]
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteForManyStatements3 [
+	| someTemp arg any |
+	self 
+		rewriteBlock: [ instVar printString . someTemp someMessage: arg part2: 10. instVarNewName printString]
+		by: [[ any. someTemp anyMessage: arg part2: 10. instVarNewName printString ] 
+				-> 
+				[ any. someTemp part2: 10 anyMessage: arg. 20 printString ]
+		]
+		with: [ any ] -> [ :p | p beMultiStatements ]
+		compareTo: [ instVar printString . someTemp part2: 10 someMessage: arg. 20 printString ]
+]
+
+{ #category : 'tests' }
 BPatternRewriteTest >> testRewriteForMessageReceiverAndArgSwap [
 	| anyRcv anyArg |
 	self 
@@ -402,6 +433,19 @@ BPatternRewriteTest >> testRewriteMethodForArgRename [
 		by:  [ [ arg ] -> [ renamedArg ] ]
 ]
 
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteMethodForArgSwapInsideInternalMessage [
+	| arg1 arg2 anyRcv |
+	
+	self 
+		rewriteMethod: #methodWithArgSwapInsideMessage:arg2:
+		by:  [
+			[[ self anyMethod: arg1 anyArg2: arg2 ] -> [ anyRcv anyMessage: arg1 anyPart2: arg2 ]] bmethod
+				-> 
+			[[ self anyMethod: arg1 anyArg2: arg2 ] -> [ anyRcv anyMessage: arg2 anyPart2: arg1 ]] bmethod
+		]
+]
+
 { #category : 'tests on methods' }
 BPatternRewriteTest >> testRewriteMethodForIfNilRule [
 
@@ -410,6 +454,82 @@ BPatternRewriteTest >> testRewriteMethodForIfNilRule [
 		rewriteMethod: ##isNilIfFalseWith:
 		by:  [
 			[ any isNil ifFalse: [ any printString ]] -> [ any ifNotNil: [ any printString ]]
+		]
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteMethodForInstVarToArgSwapInsideInternalMessage [
+	| anyRcv anyMethodArg anyArg |
+	
+	self 
+		rewriteMethod: #methodForInstVarToArgSwapInsideMessage:
+		by:  [
+			[[ self anyMethod: anyMethodArg ] -> [ anyRcv anyMessage: anyArg ]] bmethod
+				-> 
+			[[ self anyMethod: anyMethodArg ] -> [ anyRcv anyMessage: anyMethodArg ]] bmethod
+		]
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteMethodForManyStatements [
+	| someTemp arg |
+	
+	self 
+		rewriteMethod: #methodWithManyStatements
+		by:  [
+			[[self anyMethod] -> [ someTemp anyMessage: arg part2: 10 ]] bmethod
+				-> 
+			[[self anyMethod] -> [ someTemp part2: 10 anyMessage: arg ]] bmethod
+		]
+]
+
+{ #category : 'tests on methods' }
+BPatternRewriteTest >> testRewriteMethodForPragmaKeywordSwap [
+
+	| anyPragmaArg anyPragmaArg2 anyBody |
+	self 
+		rewriteMethod: ##methodWithPragmaKeywordSwap:
+		by:  [
+			[[ self anyMethod.
+			Pragma anyPragmaPrefix: anyPragmaArg part2: anyPragmaArg2.
+			] -> [ anyBody ]] bmethod
+				->
+			[[ self anyMethod.
+			Pragma part2: anyPragmaArg2 anyPragmaPrefix: anyPragmaArg.
+			
+			] -> [ anyBody ]] bmethod
+		]
+		with: [ anyBody ] -> [:pattern | pattern beMultiStatements ]
+]
+
+{ #category : 'tests on methods' }
+BPatternRewriteTest >> testRewriteMethodForPragmaRename [
+
+	| anyPragmaArg anyPragmaArg2 anyBody |
+	self 
+		rewriteMethod: ##methodWithRenamedPragma:
+		by:  [
+			[[ self anyMethod.
+			Pragma anyPragma: anyPragmaArg part2: anyPragmaArg2.
+			] -> [ anyBody ]] bmethod
+				->
+			[[ self anyMethod.
+			Pragma renamedPragma: anyPragmaArg part2: anyPragmaArg2.			
+			] -> [ anyBody ]] bmethod
+		]
+		with: [ anyBody ] -> [:pattern | pattern beMultiStatements ]
+]
+
+{ #category : 'tests' }
+BPatternRewriteTest >> testRewriteMethodWithManyStatementsForInstVarToArgSwapInsideInternalMessage [
+	| anyRcv anyMethodArg anyArg |
+	
+	self 
+		rewriteMethod: #methodWithManyStatementsForInstVarToArgSwapInsideMessage:
+		by:  [
+			[[ self anyMethod: anyMethodArg ] -> [ anyRcv anyMessage: anyArg ]] bmethod
+				-> 
+			[[ self anyMethod: anyMethodArg ] -> [ anyRcv anyMessage: anyMethodArg ]] bmethod
 		]
 ]
 

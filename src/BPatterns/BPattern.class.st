@@ -388,11 +388,22 @@ BPattern >> printOn: aStream [
 { #category : 'rewriting' }
 BPattern >> rewriteAST: originalAST with: rewritePattern [
 
-	| rewriter |
+	| rewriter bodySearch bodyRewrite |
 	rewriter := BPatternASTRewriter new.
 	rewriter addRule: (BPatternReplaceRule new 
 			searchTree: self patternAST;
 			replaceTree: rewritePattern patternAST).
+	patternAST isMethod ifTrue: [ 
+		bodySearch := self patternAST body statements size > 1
+			ifTrue: [ self patternAST body ]
+			ifFalse: [ self patternAST statements first ].
+		bodyRewrite := rewritePattern patternAST body statements size > 1
+			ifTrue: [ rewritePattern patternAST body ]
+			ifFalse: [ rewritePattern patternAST statements first ].
+		rewriter addRule: (BPatternReplaceRule new 
+			searchTree: bodySearch;
+			replaceTree: bodyRewrite).		
+	].
 	rewriter executeTree: originalAST.
 	^rewriter tree
 	

@@ -11,9 +11,12 @@ Class {
 
 { #category : 'instance creation' }
 BPatternMethodNode class >> fromHeaderBlock: aBlockWithMessageSend body: aSequenceAST [
-	| messageAST |
-	messageAST := aBlockWithMessageSend sourceNode sendNodes first.	
-	^self fromMessageNode: messageAST body: aSequenceAST
+	| messageAST messages methodNode |
+	messages := aBlockWithMessageSend sourceNode sendNodes.
+	messageAST := messages first.
+	methodNode := self fromMessageNode: messageAST body: aSequenceAST.
+	messages allButFirstDo: [:each | methodNode addPragmaFromMessage: each ].
+	^methodNode
 ]
 
 { #category : 'instance creation' }
@@ -53,10 +56,21 @@ BPatternMethodNode >> addPatternKeyword: aSymbol [
 	patternKeywords add: aSymbol
 ]
 
+{ #category : 'accessing' }
+BPatternMethodNode >> addPragmaFromMessage: aMessageNode [
+
+	| pragmaNode |
+	pragmaNode := OCPragmaNode
+						selector: aMessageNode selector 
+						keywordsPositions: aMessageNode keywordsPositions
+						arguments: aMessageNode arguments.
+	self addPragma: pragmaNode
+]
+
 { #category : 'initialization' }
 BPatternMethodNode >> adoptTemps [
 	| anyTemps |
-	body hasTemporaries ifTrue: [ ^self ].
+	body hasTemporaries | true ifTrue: [ ^self ].
 	"By default if the pattern does not explicitly define temps it will match any number of temps"
 	anyTemps := body addTemporaryNamed: 'anyTemps'.
 	anyTemps bePatternNode.
@@ -101,10 +115,8 @@ BPatternMethodNode >> copyInContext: aDictionary [
 	^ OCMethodNode new
 		selector: keywordSelector;
 		arguments: (self copyList: args inContext: aDictionary );
-		pragmas: (self pragmas isEmpty
-			ifTrue: [ aDictionary at: '-pragmas-' ifAbsent: [ #() ] ]
-			ifFalse: [ self copyList: self pragmas inContext: aDictionary ]);
-		body: (self body copyInContext: aDictionary);
+		pragmas: (self pragmas collect: [ :each | each copy ]);
+		body: self body copy;
 		source: (aDictionary at: '-source-');
 		yourself
 ]
@@ -141,18 +153,26 @@ BPatternMethodNode >> match: aNode inContext: aDictionary [
 	aDictionary at: '-source-' put: aNode source.
 	self isSelectorList ifTrue: [
 		^ (aDictionary at: self selector ifAbsentPut: [ aNode selector ]) = aNode selector
-			and: [ ((aDictionary at: self selector, '_args' ifAbsentPut: [ aNode arguments ]) = aNode arguments)
-			and: [ (self matchPragmas: self pragmas against: aNode pragmas inContext: aDictionary)
-			and: [ body match: aNode body inContext: aDictionary ] ] ] ].
+			and: [ ((aDictionary at: self selector, '_args' ifAbsentPut: [ aNode arguments ]) = aNode arguments)]].
+"			and: [ (self matchPragmas: self pragmas against: aNode pragmas inContext: aDictionary)
+			and: [ body match: aNode body inContext: aDictionary ] ] ] ]."
 	^(self matchArgumentsAgainst: aNode inContext: aDictionary)
-		and: [ (self matchPragmas: self pragmas against: aNode pragmas inContext: aDictionary)
-		and: [ body match: aNode body inContext: aDictionary ] ]
+		"and: [ (self matchPragmas: self pragmas against: aNode pragmas inContext: aDictionary)
+		and: [ body match: aNode body inContext: aDictionary ] ]"
 ]
 
 { #category : 'matching' }
 BPatternMethodNode >> matchFiltersFor: anObject [
 
 	^filters allSatisfy: [ :each | each value: anObject ]
+]
+
+{ #category : 'matching' }
+BPatternMethodNode >> matchPragmas: matchNodes against: pragmaNodes inContext: aDictionary [
+	matchNodes isEmpty ifTrue: [
+		aDictionary at: '-pragmas-' put: pragmaNodes.
+		^ true ].
+	^self matchList: matchNodes against: pragmaNodes inContext: aDictionary
 ]
 
 { #category : 'matching' }

@@ -16,7 +16,7 @@ BPatternSelectorConfig >> applyForPatternNode: aMessagePatternNode [ "or aMethod
 		"unary selector works as a selector list pattern by default.
 		It matches any kind of selector (unary, bunary and keyword) with any number of arguments"
 		aMessagePatternNode beSelectorList ].	
-	aMessagePatternNode keywords 
+	aMessagePatternNode selector keywords 
 		select: [ :each | self isForKeyword: each ] 
 		thenDo: [ :each | aMessagePatternNode addPatternKeyword: each ].		
 	super applyForPatternNode: aMessagePatternNode.	
@@ -30,7 +30,7 @@ BPatternSelectorConfig >> isForKeyword: aSymbol [
 
 { #category : 'testing' }
 BPatternSelectorConfig >> isForNode: anASTNode [
-	(anASTNode isMessage or: [ anASTNode isMethod ]) ifFalse: [ ^false ].
+	(anASTNode isMessage or: [ anASTNode isMethod or: [ anASTNode isPragma ]]) ifFalse: [ ^false ].
 	
-	^anASTNode keywords anySatisfy: [:eachKeyword | self isForKeyword: eachKeyword ]
+	^anASTNode selector keywords anySatisfy: [:eachKeyword | self isForKeyword: eachKeyword ]
 ]

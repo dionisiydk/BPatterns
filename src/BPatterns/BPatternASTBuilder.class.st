@@ -56,6 +56,13 @@ BPatternASTBuilder >> visitMethodNode: aMethodNode [
 ]
 
 { #category : 'visiting' }
+BPatternASTBuilder >> visitPragmaNode: aNode [
+	self applyConfigsFor: aNode.
+
+	super visitPragmaNode: aNode
+]
+
+{ #category : 'visiting' }
 BPatternASTBuilder >> visitVariableNode: aNode [
 	self applyConfigsFor: aNode 
 ]
