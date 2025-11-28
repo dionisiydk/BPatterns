@@ -25,11 +25,6 @@ BPatternMessageNode >> addPatternKeyword: aSymbol [
 	patternKeywords add: aSymbol
 ]
 
-{ #category : 'accessing' }
-BPatternMessageNode >> addPatternKeywords: symbols [
-	patternKeywords addAll: symbols
-]
-
 { #category : 'initialization' }
 BPatternMessageNode >> beBinary [ 
 	self where: [ :node | node selector isBinary ]

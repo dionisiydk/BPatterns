@@ -53,11 +53,6 @@ BPatternMethodNode >> addPatternKeyword: aSymbol [
 	patternKeywords add: aSymbol
 ]
 
-{ #category : 'accessing' }
-BPatternMethodNode >> addPatternKeywords: symbols [ 
-	patternKeywords addAll: symbols
-]
-
 { #category : 'initialization' }
 BPatternMethodNode >> adoptTemps [
 	| anyTemps |

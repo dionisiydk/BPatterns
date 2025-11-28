@@ -90,15 +90,54 @@ Patterns can be configured to match a particular type of variables:
 
 ```
 	| anyVar anyBlock |
-	[ anyVar ifTrue: anyBlock ] bpattern 
+	[ anyVar do: anyBlock ] bpattern 
 		with: [ anyVar ] -> [:pattern | pattern beInstVar ];
-		with: [ anyBlock ] -> [:pattern | pattern beTempVar ];
+		with: [ anyBlock ] -> [:pattern | pattern beLocalVar ];
+		browseUsers
+```
+
+See `BPatternVariableNode` for other options.
+
+And you can specify an arbitraty block filter using **#where:** message:
+
+```
+	| anyVar anyBlock |
+	[ anyVar do: anyBlock ] bpattern 
+		with: [ anyVar ] -> [:pattern | pattern beInstVar ];
+		with: [ anyBlock ] -> [:pattern | pattern beLocalVar where: [:var | 
+				(var name beginsWith: 'a') not]];
+		browseUsers
+```
+
+###Global variable patterns
+
+TODO
+
+###Literal patterns
+
+Patterns can be configured to match literals:
+
+```
+	| any any2 |
+	[ any + any2 ] bpattern 
+		with: [ any. any2 ] -> [:pattern | pattern beLiteral ];
+		browseUsers
+```
+
+This pattern will find all sum expressions with two literals.
+
+To narrow the filter you can add a **#where:** predicate block to match the literal values by an arbitrary criteria:
+
+```
+	| any any2 |
+	[ any + any2 ] bpattern 
+		with: [ any. any2 ] -> [:pattern | pattern beLiteral where: [:value | value isInteger not ]];
 		browseUsers
 ```
 
 ###Selector patterns
 
-Thus selectors can be also used as patterns:
+Selectors can be also used as patterns:
 
 ```
 	| any anyArg1 anyArg2 |
@@ -115,14 +154,14 @@ For example the following pattern will match any binary messages like 1 + 2 toge
 	[ any anyMessage: any2 ] bpattern
 ```
 
-To narrow the filter for the keyword selector type use **#beKeyword** config:
+To narrow the filter to the keyword type use **#beKeyword** config:
 
 ```
 	| any any2 |
 	[ any anyMessage: any2 ] bpattern with: #anyMessage: -> [:pattern | pattern beKeyword ].
 ```
 
-To narrow filter for the binary selector type use **#beBinary** config:
+To narrow the filter to the binary type use **#beBinary** config:
 
 ```
 	| any any2 |
@@ -136,7 +175,7 @@ Or you can configure any binary selector as a pattern:
 	[ any + any2 ] bpattern with: #+.
 ```
 
-Both examples will match any binary message send lile #+, #-, #=, etc..
+Both examples will match any binary message sends lile #+, #-, #=, etc..
 
 To play a bit try to browse all messages where receiver and arguments are literals:
 
@@ -190,13 +229,13 @@ Here the enclosing block of **#bmethod** returns an association of a pattern blo
 
 
 ```
-		| anyFirstStatement otherStatements |
-		[[ self anyMessage ] -> [ anyFirstStatement. otherStatements. super anyMessage ]] bmethod 
-			with: [ otherStatements ] -> [:pattern| pattern beMultiStatements ]; 
+		| anyStatement |
+		[[ self anyMessage ] -> [ anyStatement. super anyMessage ]] bmethod 
+			with: [ anyStatement ] -> [:pattern| pattern beMultiStatements ]; 
 			browseUsers
 ```
 
-This pattern will find all methods with a super call after a sequence of other statements.
+This pattern will find all methods with a super call after any sequence of other statements.
 
 The result of **#bmethod** is an instance of `BPattern` and therefore it can be used for the code search and for the rewrite:
 
@@ -210,6 +249,9 @@ The result of **#bmethod** is an instance of `BPattern` and therefore it can be 
 ```
 Here is a rewrite example which will find a simple recursion and replace it with a loop. The recursive call can be any kind of message send with any number of arguments.
 
+###Pragma patterns
+
+TODO
 
 
 "
