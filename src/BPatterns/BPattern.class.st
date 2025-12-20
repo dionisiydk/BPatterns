@@ -96,8 +96,6 @@ Patterns can be configured to match a particular type of variables:
 		browseUsers
 ```
 
-See `BPatternVariableNode` for other options.
-
 And you can specify an arbitraty block filter using **#where:** message:
 
 ```
@@ -109,9 +107,39 @@ And you can specify an arbitraty block filter using **#where:** message:
 		browseUsers
 ```
 
+For other options see `BPatternVariableNode`. Few examples below.
+
 ###Global variable patterns
 
-TODO
+Patterns can find message sends to globals:
+
+```
+	| any |
+	[ any initialize ] bpattern 
+		with: [ any ] -> [:pattern | pattern beGlobalVar ];
+		browseUsers
+```
+
+And you can narrow filter by given set of values:
+
+```
+	| any anySize |
+	[ any new: anySize ] bpattern 
+		with: [ any ] -> [:pattern | pattern beGlobalVarWithAny: {Array. Set} ];
+		with: [ anySize] -> [:pattern | pattern beLiteral ];
+		browseUsers
+```
+
+###Undeclared variable patterns
+
+Patterns can find undeclared variables:
+
+```
+	| any |
+	[ any ] bpattern 
+		with: [ any ] -> [:pattern | pattern beUndeclared ];
+		browseUsers
+```
 
 ###Literal patterns
 
@@ -132,6 +160,15 @@ To narrow the filter you can add a **#where:** predicate block to match the lite
 	| any any2 |
 	[ any + any2 ] bpattern 
 		with: [ any. any2 ] -> [:pattern | pattern beLiteral where: [:value | value isInteger not ]];
+		browseUsers
+```
+
+And you can also search for a particular list of literal values:
+
+```
+	| any any2 |
+	[ any + any2 ] bpattern 
+		with: [ any2 ] -> [:pattern | pattern beLiteralWithAny: #(2 3)];
 		browseUsers
 ```
 

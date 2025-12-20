@@ -58,6 +58,13 @@ BPatternVariableNode >> beLiteral [
 ]
 
 { #category : 'initialization' }
+BPatternVariableNode >> beLiteralWithAny: valueOptions [
+
+	self beLiteral.
+	self where: [:value | valueOptions includes: value ]
+]
+
+{ #category : 'initialization' }
 BPatternVariableNode >> beLocalVar [
 
 	self beVariable: [:var | var isLocalVariable ]
@@ -91,10 +98,9 @@ BPatternVariableNode >> beShadowingVar [
 ]
 
 { #category : 'initialization' }
-BPatternVariableNode >> beStatement [ 
-	isAnything := false.
-	isList := false.
-	isStatement := true
+BPatternVariableNode >> beStatement [
+	isStatement := true.
+	isList := false
 ]
 
 { #category : 'initialization' }
@@ -114,6 +120,7 @@ BPatternVariableNode >> beVariable [
 	isAnything := false.
 	isList := false.
 	isStatement := false.
+	recurseInto := true
 ]
 
 { #category : 'initialization' }
@@ -121,6 +128,21 @@ BPatternVariableNode >> beVariable: aBlock [
 
 	self beVariable.
 	self where: aBlock
+]
+
+{ #category : 'initialization' }
+BPatternVariableNode >> configureDefaults [
+	filters := #().
+	isLiteral := isStatement := false.
+	self beMultiStatements.
+	self beRecursive.
+	parent isDynamicArray ifTrue: [ 
+		"default multiStatement is not supported under dynamic array"
+		self beStatement ]. 
+	"TODO: automatically determine that the receiver represents a temp var
+	because it is declared under the pattern AST scope. Something like:
+		(parent temporaries includes: self) ifTrue: [ self beTempVar ]
+	But it should be a deeper analysys up to the root of the pattern AST"
 ]
 
 { #category : 'accessing' }
@@ -137,10 +159,7 @@ BPatternVariableNode >> hash [
 
 { #category : 'initialization' }
 BPatternVariableNode >> initializePatternVariables [
-	filters := #().
-	isList := isLiteral := isStatement := recurseInto := false.
-	isAnything := true.
-	self beRecursive
+	"see #configureDefaults"
 ]
 
 { #category : 'matching' }
@@ -155,7 +174,6 @@ BPatternVariableNode >> match: aNode inContext: aDictionary [
 
 { #category : 'matching' }
 BPatternVariableNode >> matchFiltersFor: anObject [
-
 	^filters allSatisfy: [ :each | each value: anObject ]
 
 ]
@@ -178,11 +196,9 @@ BPatternVariableNode >> matchVariable: aNode inContext: aDictionary [
 	^self compare: (aDictionary at: self ifAbsentPut: [aNode]) with: aNode
 ]
 
-{ #category : 'initialization' }
-BPatternVariableNode >> prepareForBPattern [
-	isList := isLiteral := isStatement := recurseInto := false.
-	isAnything := true.
-	self beRecursive
+{ #category : 'accessing' }
+BPatternVariableNode >> parent: aBRProgramNode [
+	parent := aBRProgramNode
 ]
 
 { #category : 'initialization' }

@@ -7,5 +7,6 @@ OCVariableNode >> bePatternNode [
 	patternNode 
 		parent: parent; 
 		variable: variable.
+	patternNode configureDefaults.
 	patternNode become: self
 ]

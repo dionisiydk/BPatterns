@@ -266,6 +266,7 @@ BPatternTest >> testCreationFromBlock [
 	self assert: patternVarNodes notEmpty.
 	patternVarNodes do: [:each | 
 		self assert: each isPatternNode.
+		self assert: each isList.
 		self assert: each isAnything.
 	].	 
 	(allVarNodes copyWithoutAll: patternVarNodes) do: [ :each |
@@ -407,8 +408,8 @@ BPatternTest >> testCreationFromBlockWithSelectorPattern [
 { #category : 'tests' }
 BPatternTest >> testCreationFromBlockWithStringPatternVar [
 
-	| actual block allVarNodes patternVarNodes nonPatternVar |
-	block := [ | patternVar | nonPatternVar isNil ifFalse: [ patternVar printString. nonPatternVar ]].
+	| actual block allVarNodes patternVarNodes nonPatternVar patternVar |
+	block := [ nonPatternVar isNil ifFalse: [ patternVar printString. nonPatternVar ]].
 	actual := block bpattern with: 'patternVar'.
 	
 	self assert: actual class equals: BPattern.
@@ -451,6 +452,17 @@ BPatternTest >> testCreationFromBlockWithVarDefinitionBlock [
 	block sourceNode variableNodes do: [:each | 
 		self deny: each  isPatternNode "original AST was not modified"
 	]
+]
+
+{ #category : 'tests' }
+BPatternTest >> testCreationFromBlockWithVarInsideDynamicArray [
+	| bpattern any varNode |
+	bpattern := [{any} printString] bpattern.
+	
+	varNode :=  bpattern patternAST variableNodes first.
+	self assert: varNode isPatternNode.
+	self deny: varNode isList.
+	self assert: varNode isStatement.
 ]
 
 { #category : 'tests' }

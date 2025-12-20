@@ -92,6 +92,16 @@ BPatternRewriteTest >> testPrinting [
 ]
 
 { #category : 'tests' }
+BPatternRewriteTest >> testRewriteForAnyLiteralFromList [
+	| any |
+	self 
+		rewriteBlock: [ 10 + 30 + 40 + instVar ]
+		by: [ [ any ] -> [ any * 2 ] ]
+		with: [ any ] -> [:pattern | pattern beLiteralWithAny: #(10 40) ]
+		compareTo: [ (10 * 2) + 30 + (40 * 2) + instVar ]
+]
+
+{ #category : 'tests' }
 BPatternRewriteTest >> testRewriteForAnyLiteralReplace [
 	| any |
 	self 
@@ -158,7 +168,7 @@ BPatternRewriteTest >> testRewriteForDuplicatesReplace [
 	self 
 		rewriteBlock: [ self first; second. self first; second. self a. self b ]
 		by: [ [ any. any. any2  ] -> [ 2 timesRepeat: [ any ]. any2 ] ]
-		with: [ any2 ] -> [:var | var beMultiStatements ]
+		with: [ any ] -> [:var | var beStatement ]
 		compareTo: [ 2 timesRepeat: [ self first; second ]. self a. self b ]
 ]
 
@@ -185,7 +195,7 @@ BPatternRewriteTest >> testRewriteForFullASTReplaceUsingPatternVar [
 
 { #category : 'tests' }
 BPatternRewriteTest >> testRewriteForGlobalVarUsingFilter [
-	| anotherTemp any |
+	| any |
 	self 
 		rewriteBlock: [ Smalltalk printString. Array asString. Set asArray. ByteArray . WeakArray ]
 		by: [ [ any ] -> [ Array ] ] 
@@ -351,6 +361,7 @@ BPatternRewriteTest >> testRewriteForMethodsWithTempsWithoutTempsInPattern [
 			[[ self anyMessage ] -> [ [ anyStmts ] repeat ]] bmethod
 		]
 		with: [ anyStmts ] -> [:pattern | pattern beMultiStatements ]
+		
 ]
 
 { #category : 'tests' }
